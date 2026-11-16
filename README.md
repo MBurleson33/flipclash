@@ -8,6 +8,7 @@ The card game by Beckett & Archer — browser edition (React + TypeScript + Vite
 npm install
 npm run dev      # local dev server
 npm test         # game-engine tests (Vitest)
+npm run playtest # thousands of bot-vs-bot games → docs/playtest-stats.md
 npm run build    # production build in dist/ — deploy to Vercel, Cloudflare Pages or GitHub Pages
 ```
 
@@ -24,6 +25,16 @@ npm run build    # production build in dist/ — deploy to Vercel, Cloudflare Pa
 
 Rule constants live in `src/engine/rules.ts`; all logic in `src/engine/engine.ts`.
 
+## Computer players
+
+`src/ai/bot.ts`. A bot only gets `viewFor(state, botId)` plus its memory of the 3 cards it peeked at — never the raw state.
+
+- **Easy** — random legal moves.
+- **Medium** — plays known high cards first and saves known low cards, but 40% of the time it forgets its peeks.
+- **Hard** — always uses its peeks, counts every revealed card to work out the odds, plays harder when a win or loss would end the game, and avoids feeding a player who is one prize from winning.
+
+Mix humans and bots in **Play → Vs computer**. With only one human there are no pass-the-device screens.
+
 ## Adding artwork
 
 Drop files into `src/assets/cards/` and rebuild — they're picked up automatically:
@@ -38,10 +49,12 @@ Background: `src/assets/brand/background.jpg`. Any card without a file uses the 
 ## Structure
 
 ```
+src/ai/        computer players + bot-vs-bot simulator
+scripts/       playtest.ts (statistics)
 src/engine/    pure game engine (no React): types, rules, seeded RNG, reducer, player views, tests
 src/components Board (exact diamond on a 5×5 grid), FlipCard (3D flip), CardFace, dialogs & UI
 src/screens/   Home, Mode, Setup, Game (pass-and-play), Gallery, How to Play, Settings
 src/lib/       art manifest, settings, synthesized sound effects, safe storage
 ```
 
-The engine is `applyAction(state, action) → state` with a seeded shuffle, and the UI only renders `viewFor(state, player)`, which strips hidden information. The AI opponent and online play (Phase 6–7) plug into that same interface.
+The engine is `applyAction(state, action) → state` with a seeded shuffle, and the UI only renders `viewFor(state, player)`, which strips hidden information. Computer players use that same interface, and online play can too.

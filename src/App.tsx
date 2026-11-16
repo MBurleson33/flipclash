@@ -13,6 +13,7 @@ export type Screen = 'home' | 'modes' | 'setup' | 'game' | 'how' | 'gallery' | '
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>('home')
+  const [setupMode, setSetupMode] = useState<'local' | 'ai'>('local')
   const [game, setGame] = useState<GameState | null>(() => {
     const saved = load<GameState | null>(SAVE_KEY, null)
     return saved && saved.version === 1 && saved.phase !== 'finished' ? saved : null
@@ -25,10 +26,20 @@ export default function App() {
 
   switch (screen) {
     case 'modes':
-      return <ModeScreen onBack={() => go('home')} onLocal={() => go('setup')} />
+      return (
+        <ModeScreen
+          onBack={() => go('home')}
+          onPick={(m) => {
+            setSetupMode(m)
+            go('setup')
+          }}
+        />
+      )
     case 'setup':
       return (
         <SetupScreen
+          key={setupMode}
+          mode={setupMode}
           onBack={() => go('modes')}
           onStart={(g) => {
             setGame(g)

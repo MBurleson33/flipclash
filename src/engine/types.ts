@@ -26,9 +26,12 @@ export interface Slot {
   used: boolean // already clashed — can never clash again
 }
 
+export type Difficulty = 'easy' | 'medium' | 'hard'
+
 export interface Player {
   id: string
   name: string
+  bot: Difficulty | null // null = human
   seat: number // 0..3, also drives the color-independent marker
   board: Record<Position, Slot>
   prizes: string[] // captured card ids, max 4
@@ -100,4 +103,5 @@ export type ActionResult =
 
 export interface PlayerSetup {
   name: string
+  bot?: Difficulty | null
 }

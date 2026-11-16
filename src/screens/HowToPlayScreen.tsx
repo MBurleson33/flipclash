@@ -28,7 +28,7 @@ function demo(opts: {
       peekVisible: !!show,
     }
   })
-  return { id: 'demo', name: 'Demo', seat: 0, slots, prizes: opts.prizes ?? [], playableCount: 0, peekDone: false, peekCount: 0 }
+  return { id: 'demo', name: 'Demo', bot: null, seat: 0, slots, prizes: opts.prizes ?? [], playableCount: 0, peekDone: false, peekCount: 0 }
 }
 
 const STEPS = [

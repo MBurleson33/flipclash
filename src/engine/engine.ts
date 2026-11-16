@@ -35,6 +35,7 @@ export function createGame(setups: PlayerSetup[], seed: number): GameState {
     return {
       id: `p${seat + 1}`,
       name: s.name.trim() || `Player ${seat + 1}`,
+      bot: s.bot ?? null,
       seat,
       board,
       prizes: [],
