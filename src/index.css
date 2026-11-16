@@ -1,0 +1,92 @@
+@import 'tailwindcss';
+
+@theme {
+  --font-display: 'Chakra Petch', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+
+  --color-ink-950: #07080a;
+  --color-ink-900: #0d0f12;
+  --color-ink-800: #15181d;
+  --color-ink-700: #1e2228;
+  --color-ink-600: #2a2f37;
+  --color-steel-100: #eef1f4;
+  --color-steel-200: #d4d9df;
+  --color-steel-300: #aeb5be;
+  --color-steel-400: #858d98;
+  --color-steel-500: #5f6772;
+  --color-clash-400: #ff4a3d;
+  --color-clash-500: #e8231a;
+  --color-clash-600: #b8140e;
+
+  --color-card-red: #e8231a;
+  --color-card-blue: #1f7bff;
+  --color-card-green: #22c55e;
+  --color-card-yellow: #f5b70a;
+  --color-card-purple: #8b4dff;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--color-ink-950);
+  color: var(--color-steel-100);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+}
+
+/* Playmat-style background: dark gradient + soft streaks inspired by the card back */
+.playmat {
+  background:
+    radial-gradient(120% 70% at 50% 0%, rgba(255, 255, 255, 0.05), transparent 60%),
+    radial-gradient(60% 40% at 0% 20%, rgba(232, 35, 26, 0.1), transparent 70%),
+    radial-gradient(50% 35% at 100% 15%, rgba(31, 123, 255, 0.08), transparent 70%),
+    radial-gradient(55% 35% at 100% 90%, rgba(139, 77, 255, 0.07), transparent 70%),
+    radial-gradient(55% 35% at 0% 95%, rgba(245, 183, 10, 0.06), transparent 70%),
+    linear-gradient(180deg, #111318 0%, #08090b 100%);
+}
+
+.metal-text {
+  background: linear-gradient(180deg, #ffffff 0%, #c9cfd6 45%, #858d98 55%, #e6eaee 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Angular cut-corner shape echoing the metallic card frames */
+.cut {
+  clip-path: polygon(10px 0, calc(100% - 10px) 0, 100% 10px, 100% calc(100% - 10px), calc(100% - 10px) 100%, 10px 100%, 0 calc(100% - 10px), 0 10px);
+}
+.cut-sm {
+  clip-path: polygon(6px 0, calc(100% - 6px) 0, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 0 calc(100% - 6px), 0 6px);
+}
+
+.card-shape {
+  clip-path: polygon(7% 0, 93% 0, 100% 5%, 100% 95%, 93% 100%, 7% 100%, 0 95%, 0 5%);
+}
+
+.preserve-3d {
+  transform-style: preserve-3d;
+}
+.backface-hidden {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-clash-400);
+  outline-offset: 3px;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  scrollbar-width: none;
+}
