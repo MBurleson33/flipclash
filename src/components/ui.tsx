@@ -112,7 +112,7 @@ export function Marker({ seat, className = '' }: { seat: number; className?: str
 }
 
 // ---------- Logo ----------
-const logoArt = artFor('flip-clash-logo') ?? artFor('logo-from-back')
+const logoArt = artFor('flip-clash-logo')
 export function Logo({ className = '' }: { className?: string }) {
   if (logoArt) {
     return (

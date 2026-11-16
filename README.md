@@ -32,7 +32,7 @@ Drop files into `src/assets/cards/` and rebuild — they're picked up automatica
 red-01.png … red-13.png   blue-…   green-…   yellow-…   purple-…   card-back.jpg
 ```
 
-Logo: `src/assets/brand/flip-clash-logo.png` (until then the logo is cropped from the card back).
+Logo: `src/assets/brand/flip-clash-logo.png`.
 Background: `src/assets/brand/background.jpg`. Any card without a file uses the placeholder design.
 
 ## Structure
