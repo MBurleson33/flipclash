@@ -1,13 +1,14 @@
 import { Backdrop, ScreenHeader } from '../components/ui'
 import { play } from '../lib/audio'
+import { onlineAvailable } from '../online/useRoom'
 
 const MODES = [
   { id: 'local', title: 'Local multiplayer', desc: '2–4 players pass one device around.', ready: true },
   { id: 'ai', title: 'Vs computer', desc: 'Play Easy, Medium or Hard computer opponents.', ready: true },
-  { id: 'online', title: 'Online', desc: 'Private rooms with shareable codes.', ready: false },
+  { id: 'online', title: 'Online', desc: 'Everyone on their own phone. Share a room code.', ready: onlineAvailable },
 ]
 
-export function ModeScreen({ onBack, onPick }: { onBack: () => void; onPick: (m: 'local' | 'ai') => void }) {
+export function ModeScreen({ onBack, onPick }: { onBack: () => void; onPick: (m: 'local' | 'ai' | 'online') => void }) {
   return (
     <main className="min-h-dvh">
       <Backdrop />
@@ -20,7 +21,7 @@ export function ModeScreen({ onBack, onPick }: { onBack: () => void; onPick: (m:
             disabled={!m.ready}
             onClick={() => {
               play('select')
-              onPick(m.id === 'ai' ? 'ai' : 'local')
+              onPick(m.id as 'local' | 'ai' | 'online')
             }}
             className="cut group relative flex min-h-40 flex-col justify-end bg-gradient-to-b from-ink-700/90 to-ink-900/90 p-5 text-left ring-1 ring-steel-400/25 transition enabled:hover:ring-clash-400/70 disabled:cursor-not-allowed disabled:opacity-55"
           >

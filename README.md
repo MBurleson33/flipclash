@@ -35,6 +35,12 @@ Rule constants live in `src/engine/rules.ts`; all logic in `src/engine/engine.ts
 
 Mix humans and bots in **Play → Vs computer**. With only one human there are no pass-the-device screens.
 
+## Online multiplayer
+
+Everyone on their own phone, with room codes, a lobby, reconnecting, and computer players for empty seats.
+A Cloudflare Worker + Durable Object (`server/`) runs the game and sends each phone only its own view.
+Setup and deploy steps: [docs/ONLINE.md](docs/ONLINE.md).
+
 ## Adding artwork
 
 Drop files into `src/assets/cards/` and rebuild — they're picked up automatically:
@@ -50,6 +56,8 @@ Background: `src/assets/brand/background.jpg`. Any card without a file uses the 
 
 ```
 src/ai/        computer players + bot-vs-bot simulator
+src/online/    room protocol, connection hook
+server/        Cloudflare room server (Worker + Durable Object)
 scripts/       playtest.ts (statistics)
 src/engine/    pure game engine (no React): types, rules, seeded RNG, reducer, player views, tests
 src/components Board (exact diamond on a 5×5 grid), FlipCard (3D flip), CardFace, dialogs & UI
@@ -57,4 +65,4 @@ src/screens/   Home, Mode, Setup, Game (pass-and-play), Gallery, How to Play, Se
 src/lib/       art manifest, settings, synthesized sound effects, safe storage
 ```
 
-The engine is `applyAction(state, action) → state` with a seeded shuffle, and the UI only renders `viewFor(state, player)`, which strips hidden information. Computer players use that same interface, and online play can too.
+The engine is `applyAction(state, action) → state` with a seeded shuffle, and the UI only renders `viewFor(state, player)`, which strips hidden information. Computer players and the online room server use that same interface.

@@ -33,6 +33,10 @@ export interface GameView {
   /** Only revealed to the viewer if it's their own pick. */
   myPick: Position | null
   activeHasPicked: boolean
+  defenderHasPicked: boolean
+  simultaneous: boolean
+  /** The two cards in the last clash — public once flipped. */
+  clashCards: { attacker: Card; defender: Card } | null
   players: PlayerView[]
   leftoverCount: number
   lastClash: GameState['lastClash']
@@ -45,7 +49,7 @@ export function viewFor(state: GameState, viewerId: string | null): GameView {
   const active = state.players[state.activeIndex]
 
   const players: PlayerView[] = state.players.map((p) => {
-    const viewerIsPeekingThis = peeker !== null && peeker.id === p.id && viewerId === p.id && !p.peekDone
+    const viewerIsPeekingThis = state.phase === 'peek' && viewerId === p.id && !p.peekDone
     const slots: SlotView[] = POSITIONS.map((pos) => {
       const s = p.board[pos]
       const peekVisible = viewerIsPeekingThis && p.peeked.includes(pos)
@@ -85,6 +89,11 @@ export function viewFor(state: GameState, viewerId: string | null): GameView {
     defenderId: state.defenderId,
     myPick,
     activeHasPicked: state.activePick !== null,
+    defenderHasPicked: state.defenderPick !== null,
+    simultaneous: !!state.simultaneous,
+    clashCards: state.lastClash
+      ? { attacker: state.cards[state.lastClash.attackerCardId], defender: state.cards[state.lastClash.defenderCardId] }
+      : null,
     players,
     leftoverCount: state.leftover.length,
     lastClash: state.lastClash,

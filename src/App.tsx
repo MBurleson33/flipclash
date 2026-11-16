@@ -8,11 +8,19 @@ import { GameScreen, SAVE_KEY } from './screens/GameScreen'
 import { GalleryScreen } from './screens/GalleryScreen'
 import { HowToPlayScreen } from './screens/HowToPlayScreen'
 import { SettingsScreen } from './screens/SettingsScreen'
+import { OnlineScreen } from './screens/online/OnlineScreen'
+import { RoomScreen } from './screens/online/RoomScreen'
+import { normalizeCode } from './online/protocol'
 
-export type Screen = 'home' | 'modes' | 'setup' | 'game' | 'how' | 'gallery' | 'settings'
+export type Screen = 'home' | 'modes' | 'setup' | 'game' | 'how' | 'gallery' | 'settings' | 'online' | 'room'
 
 export default function App() {
-  const [screen, setScreen] = useState<Screen>('home')
+  // An invite link (?room=ABCD) opens straight to the join screen.
+  const [inviteCode] = useState(() => normalizeCode(new URLSearchParams(location.search).get('room') ?? ''))
+  const [screen, setScreen] = useState<Screen>(inviteCode ? 'online' : 'home')
+  const [roomCode, setRoomCode] = useState<string | null>(null)
+  const [roomName, setRoomName] = useState('')
+  const [notice, setNotice] = useState<string | null>(null)
   const [setupMode, setSetupMode] = useState<'local' | 'ai'>('local')
   const [game, setGame] = useState<GameState | null>(() => {
     const saved = load<GameState | null>(SAVE_KEY, null)
@@ -30,6 +38,7 @@ export default function App() {
         <ModeScreen
           onBack={() => go('home')}
           onPick={(m) => {
+            if (m === 'online') return go('online')
             setSetupMode(m)
             go('setup')
           }}
@@ -68,6 +77,41 @@ export default function App() {
       )
     case 'how':
       return <HowToPlayScreen onBack={() => go(game ? 'game' : 'home')} backLabel={game ? 'game' : 'home'} />
+    case 'online':
+      return (
+        <>
+          <OnlineScreen
+            initialCode={inviteCode || undefined}
+            onBack={() => {
+              if (inviteCode) history.replaceState(null, '', location.pathname)
+              go('modes')
+            }}
+            onEnter={(code, name) => {
+              setRoomCode(code)
+              setRoomName(name)
+              setNotice(null)
+              if (location.search) history.replaceState(null, '', location.pathname)
+              go('room')
+            }}
+          />
+          {notice && (
+            <div className="fixed inset-x-0 bottom-6 flex justify-center px-4" role="status">
+              <p className="cut-sm bg-ink-700 px-4 py-2.5 text-sm text-steel-100 ring-1 ring-steel-400/30">{notice}</p>
+            </div>
+          )}
+        </>
+      )
+    case 'room':
+      return roomCode ? (
+        <RoomScreen
+          code={roomCode}
+          name={roomName}
+          onExit={(message) => {
+            setNotice(message ?? null)
+            go('online')
+          }}
+        />
+      ) : null
     case 'gallery':
       return <GalleryScreen onBack={() => go('home')} />
     case 'settings':

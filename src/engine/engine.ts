@@ -18,7 +18,7 @@ import {
 
 // ---------- setup ----------
 
-export function createGame(setups: PlayerSetup[], seed: number): GameState {
+export function createGame(setups: PlayerSetup[], seed: number, opts: { simultaneous?: boolean } = {}): GameState {
   if (setups.length < RULES.minPlayers || setups.length > RULES.maxPlayers) {
     throw new Error(`Flip Clash needs ${RULES.minPlayers}–${RULES.maxPlayers} players`)
   }
@@ -47,6 +47,7 @@ export function createGame(setups: PlayerSetup[], seed: number): GameState {
   return {
     version: 1,
     seed,
+    simultaneous: !!opts.simultaneous,
     cards,
     players,
     leftover: shuffled.slice(cursor),
@@ -104,6 +105,36 @@ export function standings(state: GameState): Standing[] {
     .sort((a, b) => b.prizes - a.prizes || b.total - a.total)
 }
 
+/** The player allowed to peek right now (anyone still peeking in simultaneous mode). */
+function peekerFor(state: GameState, playerId: string): Player | undefined {
+  if (state.simultaneous) {
+    const p = getPlayer(state, playerId)
+    return p && !p.peekDone ? p : undefined
+  }
+  const p = state.players[state.peekIndex]
+  return p.id === playerId ? p : undefined
+}
+
+/** Everyone who has a decision to make right now (more than one only in simultaneous mode). */
+export function pendingDeciders(state: GameState): string[] {
+  switch (state.phase) {
+    case 'peek':
+      return state.simultaneous
+        ? state.players.filter((p) => !p.peekDone).map((p) => p.id)
+        : [state.players[state.peekIndex].id]
+    case 'choose-opponent':
+      return [activePlayer(state).id]
+    case 'select-active':
+      return state.simultaneous && state.defenderPick === null && state.defenderId
+        ? [activePlayer(state).id, state.defenderId]
+        : [activePlayer(state).id]
+    case 'select-defender':
+      return state.defenderId ? [state.defenderId] : []
+    default:
+      return []
+  }
+}
+
 /** Who is the device "for" right now (whose secret decision is pending)? */
 export function currentDecider(state: GameState): Player | null {
   switch (state.phase) {
@@ -132,25 +163,26 @@ export function applyAction(state: GameState, action: Action): ActionResult {
   switch (action.type) {
     case 'PEEK_CARD': {
       if (state.phase !== 'peek') return fail(state, 'Not the peek phase')
-      const peeker = state.players[state.peekIndex]
-      if (peeker.id !== action.playerId) return fail(state, 'Not your turn to peek')
+      const peeker = peekerFor(state, action.playerId)
+      if (!peeker) return fail(state, 'Not your turn to peek')
       if (peeker.peeked.includes(action.position)) return fail(state, 'Already peeked at that card')
       if (peeker.peeked.length >= RULES.peekCount) return fail(state, `Only ${RULES.peekCount} peeks allowed`)
       if (!POSITIONS.includes(action.position)) return fail(state, 'No such position')
       const next = clone(state)
-      next.players[next.peekIndex].peeked.push(action.position)
+      getPlayer(next, peeker.id)!.peeked.push(action.position)
       return ok(next)
     }
 
     case 'FINISH_PEEK': {
       if (state.phase !== 'peek') return fail(state, 'Not the peek phase')
-      const peeker = state.players[state.peekIndex]
-      if (peeker.id !== action.playerId) return fail(state, 'Not your turn to peek')
+      const peeker = peekerFor(state, action.playerId)
+      if (!peeker) return fail(state, 'Not your turn to peek')
       if (peeker.peeked.length < RULES.peekCount) return fail(state, `Look at ${RULES.peekCount} cards first`)
       const next = clone(state)
-      next.players[next.peekIndex].peekDone = true
-      if (next.peekIndex < next.players.length - 1) {
-        next.peekIndex++
+      getPlayer(next, peeker.id)!.peekDone = true
+      const stillPeeking = next.players.findIndex((p) => !p.peekDone)
+      if (stillPeeking >= 0) {
+        next.peekIndex = stillPeeking
       } else {
         next.turn = 1
         next.activeIndex = 0
@@ -171,8 +203,14 @@ export function applyAction(state: GameState, action: Action): ActionResult {
     }
 
     case 'SELECT_CARD': {
-      const isActive = state.phase === 'select-active'
-      const isDefender = state.phase === 'select-defender'
+      // Online, the defender may lock in before the attacker does.
+      const earlyDefender =
+        !!state.simultaneous &&
+        state.phase === 'select-active' &&
+        action.playerId === state.defenderId &&
+        state.defenderPick === null
+      const isActive = state.phase === 'select-active' && !earlyDefender
+      const isDefender = state.phase === 'select-defender' || earlyDefender
       if (!isActive && !isDefender) return fail(state, 'Not time to pick a card')
       const chooser = isActive ? activePlayer(state) : getPlayer(state, state.defenderId!)!
       if (chooser.id !== action.playerId) return fail(state, 'Not your pick')
@@ -182,10 +220,11 @@ export function applyAction(state: GameState, action: Action): ActionResult {
       const next = clone(state)
       if (isActive) {
         next.activePick = action.position
-        next.phase = 'select-defender'
+        if (next.defenderPick !== null) resolveClash(next)
+        else next.phase = 'select-defender'
       } else {
         next.defenderPick = action.position
-        resolveClash(next)
+        if (next.activePick !== null) resolveClash(next)
       }
       return ok(next)
     }

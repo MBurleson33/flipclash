@@ -1,7 +1,7 @@
 import { Backdrop, ScreenHeader } from '../components/ui'
 import { useSettings } from '../lib/settings'
 import { play } from '../lib/audio'
-import { Toggle } from './GameScreen'
+import { Toggle } from './game/parts'
 
 export function SettingsScreen({ onBack }: { onBack: () => void }) {
   const { settings, update } = useSettings()

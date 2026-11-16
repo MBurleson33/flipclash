@@ -5,6 +5,7 @@ import {
   cardId,
   createGame,
   eligibleOpponents,
+  pendingDeciders,
   playablePositions,
   viewFor,
   POSITIONS,
@@ -285,5 +286,55 @@ describe('victory', () => {
     } else {
       expect(s.defenderId).not.toBe('p3')
     }
+  })
+})
+
+describe('simultaneous (online) mode', () => {
+  const sim = (n: number, seed = 5) => createGame(names(n), seed, { simultaneous: true })
+
+  it('everyone can peek at the same time, in any order', () => {
+    let s = sim(3)
+    expect(pendingDeciders(s)).toEqual(['p1', 'p2', 'p3'])
+    s = act(s, { type: 'PEEK_CARD', playerId: 'p3', position: 1 })
+    s = act(s, { type: 'PEEK_CARD', playerId: 'p1', position: 1 })
+    // each sees only their own peeked card
+    expect(viewFor(s, 'p3').players[2].slots[0].card).not.toBeNull()
+    expect(viewFor(s, 'p3').players[0].slots[0].card).toBeNull()
+    for (const pos of [2, 3] as Position[]) s = act(s, { type: 'PEEK_CARD', playerId: 'p3', position: pos })
+    s = act(s, { type: 'FINISH_PEEK', playerId: 'p3' })
+    expect(applyAction(s, { type: 'PEEK_CARD', playerId: 'p3', position: 4 }).ok).toBe(false)
+    expect(pendingDeciders(s)).toEqual(['p1', 'p2'])
+    for (const id of ['p1', 'p2']) {
+      for (const pos of [2, 3, 4] as Position[]) {
+        const r = applyAction(s, { type: 'PEEK_CARD', playerId: id, position: pos })
+        if (r.ok) s = r.state
+      }
+      s = act(s, { type: 'FINISH_PEEK', playerId: id })
+    }
+    expect(s.phase).toBe('choose-opponent')
+  })
+
+  it('the defender may lock in first; the clash resolves when both have picked', () => {
+    let s = sim(2)
+    for (const id of ['p1', 'p2']) {
+      for (const pos of [1, 2, 3] as Position[]) s = act(s, { type: 'PEEK_CARD', playerId: id, position: pos })
+      s = act(s, { type: 'FINISH_PEEK', playerId: id })
+    }
+    expect(s.phase).toBe('select-active')
+    expect(pendingDeciders(s)).toEqual(['p1', 'p2'])
+    s = act(s, { type: 'SELECT_CARD', playerId: 'p2', position: 4 })
+    expect(s.phase).toBe('select-active')
+    expect(viewFor(s, 'p1').defenderHasPicked).toBe(true)
+    expect(viewFor(s, 'p1').myPick).toBeNull() // p1 can't see where p2 picked
+    expect(applyAction(s, { type: 'SELECT_CARD', playerId: 'p2', position: 5 }).ok).toBe(false)
+    s = act(s, { type: 'SELECT_CARD', playerId: 'p1', position: 6 })
+    expect(s.phase).toBe('reveal')
+    expect(s.lastClash).toMatchObject({ attackerPos: 6, defenderPos: 4 })
+    expect(viewFor(s, null).clashCards).not.toBeNull()
+  })
+
+  it('local (pass-and-play) mode still requires seat order', () => {
+    const s = createGame(names(2), 5)
+    expect(applyAction(s, { type: 'PEEK_CARD', playerId: 'p2', position: 1 }).ok).toBe(false)
   })
 })
