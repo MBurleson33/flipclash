@@ -54,7 +54,7 @@ export function GalleryScreen({ onBack }: { onBack: () => void }) {
         )}
         {shown.map((c) => (
           <GalleryItem key={c.id} label={cardLabel(c)} onClick={() => setOpen(c)}>
-            <CardFront card={c} />
+            <CardFront card={c} lazy />
           </GalleryItem>
         ))}
       </div>
