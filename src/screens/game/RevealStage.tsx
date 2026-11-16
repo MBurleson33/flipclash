@@ -62,6 +62,15 @@ export function RevealStage({
     return () => timers.forEach(clearTimeout)
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Move on by itself once the result has been shown; the button just skips the wait.
+  const settled = winner ? step === 'capture' : step === 'result'
+  const autoMs = Math.max(1800, 2200 * speed)
+  useEffect(() => {
+    if (!settled) return
+    const t = setTimeout(onNext, autoMs)
+    return () => clearTimeout(t)
+  }, [settled]) // eslint-disable-line react-hooks/exhaustive-deps
+
   const flipped = step !== 'ready'
   const decided = step === 'result' || step === 'capture'
   const publicView = viewFor(state, null)
@@ -155,8 +164,18 @@ export function RevealStage({
       <div className="mt-3 h-12">
         {decided && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 * speed }}>
-            <Button variant="primary" className="min-w-56" onClick={onNext} autoFocus>
-              {finalClash ? 'See who won!' : 'Next turn'}
+            <Button variant="primary" className="relative min-w-56 overflow-hidden" onClick={onNext} autoFocus>
+              {settled && (
+                <motion.span
+                  key="bar"
+                  className="absolute inset-y-0 left-0 bg-white/20"
+                  initial={{ width: '0%' }}
+                  animate={{ width: '100%' }}
+                  transition={{ duration: autoMs / 1000, ease: 'linear' }}
+                  aria-hidden
+                />
+              )}
+              <span className="relative">{finalClash ? 'See who won!' : 'Next turn'}</span>
             </Button>
           </motion.div>
         )}
