@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
-import type { GameState } from '../../engine'
-import { viewFor } from '../../engine'
+import type { GameView } from '../../engine/view'
 import { Board } from '../../components/Board'
 import { cardLabel } from '../../components/CardFace'
 import { FlipCard } from '../../components/FlipCard'
@@ -14,23 +13,23 @@ type Step = 'ready' | 'flip' | 'result' | 'capture'
 
 /** The public clash: both chosen cards flip at once, the higher number wins and captures. */
 export function RevealStage({
-  state,
+  view,
   onNext,
   onAnnounce,
 }: {
-  state: GameState
+  view: GameView
   onNext: () => void
   onAnnounce: (msg: string) => void
 }) {
-  const clash = state.lastClash!
+  const clash = view.lastClash!
   const { speed } = useSettings()
   const [step, setStep] = useState<Step>('ready')
 
-  const attacker = state.players.find((p) => p.id === clash.attackerId)!
-  const defender = state.players.find((p) => p.id === clash.defenderId)!
-  const aCard = state.cards[clash.attackerCardId]
-  const dCard = state.cards[clash.defenderCardId]
-  const winner = clash.winnerId ? state.players.find((p) => p.id === clash.winnerId)! : null
+  const attacker = view.players.find((p) => p.id === clash.attackerId)!
+  const defender = view.players.find((p) => p.id === clash.defenderId)!
+  const aCard = view.clashCards!.attacker
+  const dCard = view.clashCards!.defender
+  const winner = clash.winnerId ? view.players.find((p) => p.id === clash.winnerId)! : null
   const aWins = clash.winnerId === attacker.id
   const dWins = clash.winnerId === defender.id
 
@@ -73,10 +72,10 @@ export function RevealStage({
 
   const flipped = step !== 'ready'
   const decided = step === 'result' || step === 'capture'
-  const publicView = viewFor(state, null)
+  const publicView = view
   const winnerView = winner ? publicView.players.find((p) => p.id === winner.id)! : null
   const { ref, width } = useFitWidth<HTMLDivElement>(1.365, 420)
-  const finalClash = !!state.result
+  const finalClash = !!view.result
 
   return (
     <div className="flex min-h-0 flex-1 flex-col items-center px-4 pb-4">

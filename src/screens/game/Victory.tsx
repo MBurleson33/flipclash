@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from 'react'
 import { motion } from 'motion/react'
-import type { GameState } from '../../engine'
+import type { GameView } from '../../engine/view'
 import { Backdrop, Button, Logo, Marker, Pips } from '../../components/ui'
 import { useSettings } from '../../lib/settings'
 import { play } from '../../lib/audio'
@@ -8,17 +8,18 @@ import { play } from '../../lib/audio'
 const BURST = ['#e8231a', '#1f7bff', '#22c55e', '#f5b70a', '#8b4dff', '#eef1f4']
 
 export function Victory({
-  state,
+  view,
   onPlayAgain,
   onMenu,
 }: {
-  state: GameState
-  onPlayAgain: () => void
+  view: GameView
+  /** Leave out to show a waiting note instead (online, when you're not the host). */
+  onPlayAgain?: () => void
   onMenu: () => void
 }) {
   const { reduced, settings } = useSettings()
-  const result = state.result!
-  const winners = result.winnerIds.map((id) => state.players.find((p) => p.id === id)!)
+  const result = view.result!
+  const winners = result.winnerIds.map((id) => view.players.find((p) => p.id === id)!)
   const isDraw = winners.length > 1
 
   useEffect(() => {
@@ -88,7 +89,7 @@ export function Victory({
 
       <ol className="mt-6 w-full max-w-sm space-y-2 text-left" aria-label="Final standings">
         {result.standings.map((s, i) => {
-          const p = state.players.find((x) => x.id === s.playerId)!
+          const p = view.players.find((x) => x.id === s.playerId)!
           return (
             <li key={s.playerId} className="cut-sm flex items-center gap-3 bg-ink-800/85 px-4 py-2.5 ring-1 ring-steel-400/20">
               <span className="w-5 font-display font-bold text-steel-400">{i + 1}</span>
@@ -104,9 +105,13 @@ export function Victory({
       </ol>
 
       <div className="mt-8 flex flex-wrap justify-center gap-3">
-        <Button variant="primary" onClick={onPlayAgain} autoFocus>
-          Play again
-        </Button>
+        {onPlayAgain ? (
+          <Button variant="primary" onClick={onPlayAgain} autoFocus>
+            Play again
+          </Button>
+        ) : (
+          <p className="flex min-h-12 items-center px-2 text-sm text-steel-300">Waiting for the host to start a rematch…</p>
+        )}
         <Button onClick={onMenu}>Main menu</Button>
       </div>
     </motion.div>

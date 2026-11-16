@@ -75,6 +75,8 @@ export interface GameResult {
 export interface GameState {
   version: 1
   seed: number
+  /** Online play: everyone peeks at once, and the defender may pick before the attacker. */
+  simultaneous?: boolean
   cards: Record<string, Card>
   players: Player[]
   leftover: string[] // undealt cards, never used in play

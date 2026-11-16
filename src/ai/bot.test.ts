@@ -16,6 +16,14 @@ describe('computer players', () => {
     }
   })
 
+  it('bots finish online-rules games where several players act at once', () => {
+    for (let n = 2; n <= 4; n++) {
+      for (let seed = 1; seed <= 30; seed++) {
+        expect(simulateGame(['easy', 'medium', 'hard', 'hard'].slice(0, n) as Difficulty[], seed, { simultaneous: true }).phase).toBe('finished')
+      }
+    }
+  })
+
   it('mixed difficulties play together', () => {
     for (let seed = 1; seed <= 30; seed++) {
       expect(simulateGame(['easy', 'medium', 'hard', 'hard'], seed).phase).toBe('finished')

@@ -46,7 +46,8 @@ export function botAct(
 
   switch (view.phase) {
     case 'peek': {
-      if (view.peekerId !== botId) return null
+      const myTurnToPeek = view.simultaneous ? !me.peekDone : view.peekerId === botId
+      if (!myTurnToPeek) return null
       if (me.peekCount < RULES.peekCount) {
         const options = me.slots.filter((s) => !s.peekedByOwner)
         return { action: { type: 'PEEK_CARD', playerId: botId, position: pick(options, rand).position }, memory: mem }
@@ -60,9 +61,13 @@ export function botAct(
     }
     case 'select-active':
     case 'select-defender': {
-      const mine = view.phase === 'select-active' ? view.activeId === botId : view.defenderId === botId
-      if (!mine) return null
-      const oppId = view.phase === 'select-active' ? view.defenderId! : view.activeId
+      const asAttacker = view.phase === 'select-active' && view.activeId === botId && view.myPick === null
+      const asDefender =
+        view.defenderId === botId &&
+        view.myPick === null &&
+        (view.phase === 'select-defender' || (view.simultaneous && view.phase === 'select-active'))
+      if (!asAttacker && !asDefender) return null
+      const oppId = asAttacker ? view.defenderId! : view.activeId
       const opp = view.players.find((p) => p.id === oppId)!
       const position = chooseCard(view, me, opp, level, mem, rand)
       return { action: { type: 'SELECT_CARD', playerId: botId, position }, memory: mem }
