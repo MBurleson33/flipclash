@@ -118,7 +118,7 @@ export function SetupScreen({
 
         <p className="mt-5 text-sm leading-relaxed text-steel-300">
           {mode === 'ai'
-            ? 'Easy plays at random. Medium uses its peeks — most of the time. Hard counts cards and plays to win. Computer players only know what their seat could know.'
+            ? 'Easy plays at random. Medium uses its peeks — most of the time. Hard counts cards and plays to win, with the occasional slip. Computer players only know what their seat could know.'
             : 'Sit in turn order around the device. The deck is shuffled, 9 cards are dealt face down to each player, and everyone gets one secret look at 3 of their own cards.'}
         </p>
 

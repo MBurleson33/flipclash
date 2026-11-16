@@ -81,8 +81,8 @@ export function Victory({
         </h2>
         <p className="mt-2 text-steel-300">
           {result.reason === 'four-prizes'
-            ? 'Filled all 4 prize spots!'
-            : 'The cards ran out — most prizes (then highest prize total) wins.'}
+            ? 'Got all 4 wins!'
+            : 'The cards ran out — most wins (then highest total) takes it.'}
         </p>
       </motion.div>
 
@@ -95,7 +95,7 @@ export function Victory({
               <Marker seat={p.seat} />
               <span className="flex-1 truncate font-display font-semibold text-white">{p.name}</span>
               <Pips filled={s.prizes} />
-              <span className="w-14 text-right text-sm text-steel-300" aria-label={`prize total ${s.total}`}>
+              <span className="w-14 text-right text-sm text-steel-300" aria-label={`total of won cards ${s.total}`}>
                 Σ {s.total}
               </span>
             </li>

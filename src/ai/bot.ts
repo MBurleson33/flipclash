@@ -21,6 +21,9 @@ export interface BotTurn {
 
 type Rand = () => number
 
+/** How often Hard plays a random card instead of its best one (Medium forgets 40% of the time). */
+export const HARD_SLIP = 0.1
+
 const NUMBERS = Array.from({ length: RULES.numbersPerColor }, (_, i) => i + 1)
 
 /**
@@ -98,7 +101,10 @@ function chooseCard(
     return best(options, (s) => score(s) + rand() * 0.01).position
   }
 
-  // HARD: count cards. Every card I can see is out of the pool, so the odds of an unknown card shift.
+  // HARD: tuned slightly below its best — now and then it plays a card without thinking.
+  if (rand() < HARD_SLIP) return pick(options, rand).position
+
+  // Count cards. Every card I can see is out of the pool, so the odds of an unknown card shift.
   const dist = unknownDistribution(view, me, mem)
   const pWinWith = (v: number) => sumWhere(dist, (n) => n < v)
   const pLoseWith = (v: number) => sumWhere(dist, (n) => n > v)

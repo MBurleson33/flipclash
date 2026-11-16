@@ -34,7 +34,7 @@ function demo(opts: {
 const STEPS = [
   {
     title: 'The board',
-    body: 'Each player gets their own diamond. The deck (65 cards: red, blue, green, yellow and purple, 1–13) is shuffled and 9 cards are dealt face down to every player. The 4 dashed spots around the middle card start empty — they hold the cards you win.',
+    body: 'Each player gets their own diamond. The deck (65 cards: red, blue, green, yellow and purple, 1–13) is shuffled and 9 cards are dealt face down to every player. The 4 dashed WIN spots around the middle card start empty — they hold the cards you win.',
     board: demo({}),
   },
   {
@@ -48,13 +48,13 @@ const STEPS = [
     clash: true,
   },
   {
-    title: 'Capture a prize',
-    body: 'The winner takes the loser’s card and puts it in one of their prize spots. The winning card stays face up where it is and can never clash again. The loser’s spot stays empty. On a tie, nobody wins and both cards are used up.',
+    title: 'Get a win',
+    body: 'The winner takes the loser’s card and puts it in one of their win spots. The winning card stays face up where it is and can never clash again. The loser’s spot stays empty. On a tie, nobody wins and both cards are used up.',
     board: demo({ up: { 1: c('yellow', 12), 5: c('purple', 6) }, empty: [7], prizes: [c('blue', 9), c('red', 4)] }),
   },
   {
     title: 'Winning',
-    body: 'The first player to fill all 4 prize spots wins right away. If the cards run out first, the player with the most prizes wins — and if that’s tied, the highest total of captured numbers wins. Turns pass clockwise; players with no face-down cards left are skipped.',
+    body: 'The first player to get 4 wins takes the game right away. If the cards run out first, the player with the most wins takes it — and if that’s tied, the highest total of the numbers they won. Turns pass clockwise; players with no face-down cards left are skipped.',
     board: demo({
       up: { 1: c('yellow', 12), 3: c('green', 10), 5: c('purple', 6), 8: c('red', 13) },
       empty: [4, 7],
