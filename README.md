@@ -31,7 +31,7 @@ Rule constants live in `src/engine/rules.ts`; all logic in `src/engine/engine.ts
 
 - **Easy** — random legal moves.
 - **Medium** — plays known high cards first and saves known low cards, but 40% of the time it forgets its peeks.
-- **Hard** — always uses its peeks, counts every revealed card to work out the odds, plays harder when a win or loss would end the game, and avoids feeding a player who is one prize from winning.
+- **Hard** — uses its peeks (slipping up about 10% of the time, so it's beatable), counts every revealed card to work out the odds, plays harder when a win or loss would end the game, and avoids feeding a player who is one prize from winning.
 
 Mix humans and bots in **Play → Vs computer**. With only one human there are no pass-the-device screens.
 
