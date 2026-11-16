@@ -3,11 +3,11 @@ import { play } from '../lib/audio'
 
 const MODES = [
   { id: 'local', title: 'Local multiplayer', desc: '2–4 players pass one device around.', ready: true },
-  { id: 'ai', title: 'Vs computer', desc: 'Easy, Medium and Hard opponents.', ready: false },
+  { id: 'ai', title: 'Vs computer', desc: 'Play Easy, Medium or Hard computer opponents.', ready: true },
   { id: 'online', title: 'Online', desc: 'Private rooms with shareable codes.', ready: false },
 ]
 
-export function ModeScreen({ onBack, onLocal }: { onBack: () => void; onLocal: () => void }) {
+export function ModeScreen({ onBack, onPick }: { onBack: () => void; onPick: (m: 'local' | 'ai') => void }) {
   return (
     <main className="min-h-dvh">
       <Backdrop />
@@ -20,7 +20,7 @@ export function ModeScreen({ onBack, onLocal }: { onBack: () => void; onLocal: (
             disabled={!m.ready}
             onClick={() => {
               play('select')
-              onLocal()
+              onPick(m.id === 'ai' ? 'ai' : 'local')
             }}
             className="cut group relative flex min-h-40 flex-col justify-end bg-gradient-to-b from-ink-700/90 to-ink-900/90 p-5 text-left ring-1 ring-steel-400/25 transition enabled:hover:ring-clash-400/70 disabled:cursor-not-allowed disabled:opacity-55"
           >

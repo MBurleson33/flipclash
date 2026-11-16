@@ -15,6 +15,7 @@ export interface SlotView {
 export interface PlayerView {
   id: string
   name: string
+  bot: import('./types').Difficulty | null
   seat: number
   slots: SlotView[]
   prizes: Card[]
@@ -62,6 +63,7 @@ export function viewFor(state: GameState, viewerId: string | null): GameView {
     return {
       id: p.id,
       name: p.name,
+      bot: p.bot,
       seat: p.seat,
       slots,
       prizes: p.prizes.map((id) => state.cards[id]),

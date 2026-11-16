@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { AnimatePresence } from 'motion/react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { AnimatePresence, motion } from 'motion/react'
 import {
   applyAction,
   createGame,
@@ -15,15 +15,17 @@ import {
 import type { PlayerView } from '../engine/view'
 import { Board } from '../components/Board'
 import { Backdrop, Button, Dialog, Marker, Pips } from '../components/ui'
-import { useFitWidth } from '../components/useFit'
+import { BOARD_RATIO, useFitWidth } from '../components/useFit'
 import { useSettings } from '../lib/settings'
-import { save } from '../lib/storage'
+import { load, save } from '../lib/storage'
+import { botAct, type BotMemory } from '../ai/bot'
 import { preloadCardArt } from '../lib/art'
 import { Handoff } from './game/Handoff'
 import { RevealStage } from './game/RevealStage'
 import { Victory } from './game/Victory'
 
 export const SAVE_KEY = 'flipclash.game.v1'
+const BOT_MEM_KEY = 'flipclash.botmem.v1'
 
 interface Props {
   initial: GameState
@@ -46,6 +48,14 @@ export function GameScreen({ initial, onExit, onRestart, onHowToPlay, onSaved }:
 
   useEffect(preloadCardArt, [])
 
+  // Each computer player's private memory of the cards it peeked at (kept across resume).
+  const botMemory = useRef<Record<string, BotMemory>>(
+    (() => {
+      const saved = load<{ seed: number; mem: Record<string, BotMemory> } | null>(BOT_MEM_KEY, null)
+      return saved && saved.seed === initial.seed ? saved.mem : {}
+    })(),
+  )
+
   const dispatch = useCallback(
     (action: Action) => {
       setState((s) => {
@@ -66,13 +76,37 @@ export function GameScreen({ initial, onExit, onRestart, onHowToPlay, onSaved }:
   }, [state]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const decider = currentDecider(state)
-  const needsHandoff = !!decider && gateId !== decider.id
-  const viewerId = decider && !needsHandoff && !hiding ? decider.id : null
+  const humanCount = state.players.filter((p) => !p.bot).length
+  const botTurn = !!decider?.bot
+  // Only pass the device around when more than one human is playing.
+  const needsHandoff = !!decider && !botTurn && humanCount > 1 && gateId !== decider.id
+  const viewerId = decider && !botTurn && !needsHandoff && !hiding ? decider.id : null
   const view = useMemo(() => viewFor(state, viewerId), [state, viewerId])
   const publicView = useMemo(() => viewFor(state, null), [state])
   const me = decider ? view.players.find((p) => p.id === decider.id)! : null
   const active = state.players[state.activeIndex]
   const defender = state.defenderId ? state.players.find((p) => p.id === state.defenderId)! : null
+
+  // Computer turns: think for a moment, then act from the bot's own player view.
+  useEffect(() => {
+    if (!decider?.bot) return
+    const base = state.phase === 'peek' ? 420 : state.phase === 'choose-opponent' ? 750 : 950
+    const t = setTimeout(
+      () => {
+        const turn = botAct(state, decider.id, decider.bot!, botMemory.current[decider.id] ?? {})
+        if (!turn) return
+        botMemory.current = { ...botMemory.current, [decider.id]: turn.memory }
+        save(BOT_MEM_KEY, { seed: state.seed, mem: botMemory.current })
+        if (turn.action.type === 'CHOOSE_OPPONENT') {
+          const opp = state.players.find((p) => p.id === (turn.action as { opponentId: string }).opponentId)
+          setAnnounce(`${decider.name} challenges ${opp?.name}.`)
+        }
+        dispatch(turn.action)
+      },
+      Math.max(120, base * speed),
+    )
+    return () => clearTimeout(t)
+  }, [state]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Reset the local pick when the decision changes hands.
   useEffect(() => setPick(null), [state.phase, decider?.id])
@@ -126,7 +160,7 @@ export function GameScreen({ initial, onExit, onRestart, onHowToPlay, onSaved }:
 
   const restart = () => {
     const g = createGame(
-      state.players.map((p) => ({ name: p.name })),
+      state.players.map((p) => ({ name: p.name, bot: p.bot })),
       randomSeed(),
     )
     setConfirm(null)
@@ -135,7 +169,7 @@ export function GameScreen({ initial, onExit, onRestart, onHowToPlay, onSaved }:
   }
 
   const showBoard =
-    !needsHandoff && me && (state.phase === 'peek' || state.phase === 'select-active' || state.phase === 'select-defender')
+    !needsHandoff && !botTurn && me && (state.phase === 'peek' || state.phase === 'select-active' || state.phase === 'select-defender')
 
   return (
     <div className="fixed inset-0 flex touch-manipulation flex-col overflow-hidden select-none">
@@ -187,7 +221,23 @@ export function GameScreen({ initial, onExit, onRestart, onHowToPlay, onSaved }:
         </>
       )}
 
-      {!needsHandoff && state.phase === 'choose-opponent' && (
+      {botTurn && decider && (
+        <BotThinking
+          name={decider.name}
+          seat={decider.seat}
+          phase={state.phase}
+          board={publicView.players.find((p) => p.id === decider.id)!}
+          against={
+            state.phase === 'select-defender'
+              ? active.name
+              : state.phase === 'select-active'
+                ? defender?.name
+                : undefined
+          }
+        />
+      )}
+
+      {!needsHandoff && !botTurn && state.phase === 'choose-opponent' && (
         <ChooseOpponent
           title={title}
           hint={hint}
@@ -350,7 +400,7 @@ function PlayerChip({
       type="button"
       role="listitem"
       onClick={onClick}
-      aria-label={`${p.name}${active ? ', current turn' : ''}${defending ? ', defending' : ''}. ${p.prizes.length} of 4 prizes, ${p.playableCount} cards left. Show board.`}
+      aria-label={`${p.name}${p.bot ? ` (computer, ${p.bot})` : ''}${active ? ', current turn' : ''}${defending ? ', defending' : ''}. ${p.prizes.length} of 4 prizes, ${p.playableCount} cards left. Show board.`}
       className={`cut-sm flex shrink-0 items-center gap-2 px-3 py-1.5 text-left transition ${
         active ? 'bg-clash-600/30 ring-1 ring-clash-400/80' : 'bg-ink-800/85 ring-1 ring-steel-400/20'
       }`}
@@ -361,6 +411,7 @@ function PlayerChip({
           {p.name}
           {active && <span className="text-[10px] tracking-widest text-clash-400 uppercase">Turn</span>}
           {defending && <span className="text-[10px] tracking-widest text-steel-300 uppercase">Def</span>}
+          {p.bot && <span className="cut-sm bg-ink-600 px-1 text-[9px] tracking-widest text-steel-300 uppercase">CPU</span>}
         </span>
         <span className="mt-0.5 flex items-center gap-2">
           <Pips filled={p.prizes.length} />
@@ -491,5 +542,58 @@ export function Toggle({ label, on, onChange }: { label: string; on: boolean; on
         />
       </span>
     </button>
+  )
+}
+
+function BotThinking({
+  name,
+  seat,
+  phase,
+  board,
+  against,
+}: {
+  name: string
+  seat: number
+  phase: string
+  board: PlayerView
+  against?: string
+}) {
+  const { ref, width } = useFitWidth<HTMLDivElement>(BOARD_RATIO, 420)
+  const what =
+    phase === 'peek'
+      ? `is peeking at ${RULES.peekCount} cards…`
+      : phase === 'choose-opponent'
+        ? 'is choosing who to clash with…'
+        : phase === 'select-defender'
+          ? `is picking a card to defend against ${against}…`
+          : `is picking a card to clash with ${against}…`
+  return (
+    <>
+      <div className="px-4 pt-1 pb-2 text-center" aria-live="polite">
+        <h1 className="flex items-center justify-center gap-2 font-display text-xl font-bold tracking-wide text-white uppercase sm:text-2xl">
+          <Marker seat={seat} /> {name}
+        </h1>
+        <p className="mt-0.5 flex items-center justify-center gap-2 text-sm text-steel-300">
+          {what}
+          <span className="inline-flex gap-1" aria-hidden>
+            {[0, 1, 2].map((i) => (
+              <motion.span
+                key={i}
+                className="h-1.5 w-1.5 rounded-full bg-clash-400"
+                animate={{ opacity: [0.2, 1, 0.2] }}
+                transition={{ duration: 0.9, repeat: Infinity, delay: i * 0.15 }}
+              />
+            ))}
+          </span>
+        </p>
+      </div>
+      <div ref={ref} className="flex min-h-0 flex-1 items-center justify-center px-3 pb-6">
+        {width > 0 && (
+          <div style={{ width }} className="opacity-90">
+            <Board player={board} />
+          </div>
+        )}
+      </div>
+    </>
   )
 }
