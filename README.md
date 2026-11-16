@@ -15,13 +15,13 @@ npm run build    # production build in dist/ — deploy to Vercel, Cloudflare Pa
 ## Official rules (v1)
 
 - **Deck:** 65 cards — red, blue, green, yellow, purple, each numbered 1–13. Color is art only.
-- **Players:** 2–4. Each player has their own diamond board: 9 card spots + 4 prize spots around the middle card.
-- **Setup:** shuffle; deal 9 cards face down to each player. Prize spots start empty. Leftover cards are not used.
+- **Players:** 2–4. Each player has their own diamond board: 9 card spots + 4 win spots around the middle card.
+- **Setup:** shuffle; deal 9 cards face down to each player. Win spots start empty. Leftover cards are not used.
 - **Peek:** before play, each player secretly looks at 3 of their own cards and puts them back face down. No looking again.
 - **Turn:** the active player picks an opponent (auto with 2 players). Each secretly picks one of their own face-down cards; both flip at once.
-- **Clash:** higher number wins and puts the loser's card in one of the winner's prize spots. The winner's card stays face up and can't clash again; the loser's spot stays empty. **Tie:** nobody wins, both cards stay face up, used.
+- **Clash:** higher number wins and puts the loser's card in one of the winner's win spots. The winner's card stays face up and can't clash again; the loser's spot stays empty. **Tie:** nobody wins, both cards stay face up, used.
 - **Turn order:** clockwise. Players with no face-down cards left are skipped and can't be picked.
-- **Winning:** first to fill all 4 prize spots wins immediately. If clashes run out (fewer than two players with face-down cards): most prizes wins, then highest total of captured numbers, otherwise a draw.
+- **Winning:** first to get 4 wins takes the game immediately. If clashes run out (fewer than two players with face-down cards): most wins takes it, then highest total of won cards, otherwise a draw.
 
 Rule constants live in `src/engine/rules.ts`; all logic in `src/engine/engine.ts`.
 
@@ -31,7 +31,7 @@ Rule constants live in `src/engine/rules.ts`; all logic in `src/engine/engine.ts
 
 - **Easy** — random legal moves.
 - **Medium** — plays known high cards first and saves known low cards, but 40% of the time it forgets its peeks.
-- **Hard** — uses its peeks (slipping up about 10% of the time, so it's beatable), counts every revealed card to work out the odds, plays harder when a win or loss would end the game, and avoids feeding a player who is one prize from winning.
+- **Hard** — uses its peeks (slipping up about 10% of the time, so it's beatable), counts every revealed card to work out the odds, plays harder when a win or loss would end the game, and avoids feeding a player who is one win away from taking the game.
 
 Mix humans and bots in **Play → Vs computer**. With only one human there are no pass-the-device screens.
 

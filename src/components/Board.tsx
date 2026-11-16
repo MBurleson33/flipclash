@@ -156,11 +156,11 @@ function PrizeCell({ index, card, fresh }: { index: number; card: import('../eng
       <div
         className="absolute inset-[4%] grid place-items-center rounded-[7%] border-2 border-dashed border-clash-400/45 bg-clash-600/5"
         role="img"
-        aria-label={card ? `Prize ${index + 1}: ${cardLabel(card)}` : `Prize ${index + 1}: empty`}
+        aria-label={card ? `Win ${index + 1}: ${cardLabel(card)}` : `Win ${index + 1}: empty`}
       >
         {!card && (
           <span className="font-display text-[13cqw] font-semibold tracking-widest text-clash-400/55 uppercase">
-            Prize
+            Win
           </span>
         )}
       </div>

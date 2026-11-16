@@ -175,7 +175,7 @@ export function ScreenHeader({ title, onBack }: { title: string; onBack: () => v
 
 export function Pips({ filled, total = 4, label }: { filled: number; total?: number; label?: string }) {
   return (
-    <span className="inline-flex gap-1" role="img" aria-label={label ?? `${filled} of ${total} prizes`}>
+    <span className="inline-flex gap-1" role="img" aria-label={label ?? `${filled} of ${total} wins`}>
       {Array.from({ length: total }, (_, i) => (
         <span
           key={i}

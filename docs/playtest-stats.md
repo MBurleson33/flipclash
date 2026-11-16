@@ -40,7 +40,7 @@ A player who uses their peeks beats an identical player who ignores them **57.5%
 
 ## Notes
 
-- **Turn order:** 2-player games are dead even. In 3–4 player games the small seat differences depend on *how* players pick opponents, not on the rules: with random targeting (Easy bots) going first is a slight edge (26.6% in 4-player); when everyone picks on the player with the fewest prizes (Medium/Hard bots), the last seat gets the edge (28.6%). Worth watching in real games, but there's no built-in turn-order bias.
+- **Turn order:** 2-player games are dead even. In 3–4 player games the small seat differences depend on *how* players pick opponents, not on the rules: with random targeting (Easy bots) going first is a slight edge (26.6% in 4-player); when everyone picks on the player with the fewest wins (Medium/Hard bots), the last seat gets the edge (28.6%). Worth watching in real games, but there's no built-in turn-order bias.
 - **Skill vs luck:** because both cards are chosen blind, the main skill is remembering your peeks — play known high cards, hold known low cards. That alone is about a 60/40 edge. Card counting and opponent choice add a little more on top (Hard vs Medium). Hard is deliberately tuned to slip up 10% of the time so it stays beatable.
 - **Game length:** a 2-player game is about 6 clashes (each player uses only ~6 of their 9 cards), so games are quick and the cards almost never run out.
 

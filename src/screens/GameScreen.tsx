@@ -437,7 +437,7 @@ function PlayerChip({
       type="button"
       role="listitem"
       onClick={onClick}
-      aria-label={`${p.name}${p.bot ? ` (computer, ${p.bot})` : ''}${active ? ', current turn' : ''}${defending ? ', defending' : ''}. ${p.prizes.length} of 4 prizes, ${p.playableCount} cards left. Show board.`}
+      aria-label={`${p.name}${p.bot ? ` (computer, ${p.bot})` : ''}${active ? ', current turn' : ''}${defending ? ', defending' : ''}. ${p.prizes.length} of 4 wins, ${p.playableCount} cards left. Show board.`}
       className={`cut-sm flex shrink-0 items-center gap-2 px-3 py-1.5 text-left transition ${
         active ? 'bg-clash-600/30 ring-1 ring-clash-400/80' : 'bg-ink-800/85 ring-1 ring-steel-400/20'
       }`}
@@ -545,7 +545,7 @@ function ChooseOpponent({
             type="button"
             onClick={() => onChoose(o.id)}
             className="cut group flex flex-col items-center gap-3 bg-gradient-to-b from-ink-700/90 to-ink-900/90 p-4 ring-1 ring-steel-400/25 transition hover:ring-clash-400/70"
-            aria-label={`Clash with ${o.name}: ${o.prizes.length} prizes, ${o.playableCount} cards left`}
+            aria-label={`Clash with ${o.name}: ${o.prizes.length} wins, ${o.playableCount} cards left`}
           >
             <span className="flex items-center gap-2 font-display text-xl font-bold text-white">
               <Marker seat={o.seat} /> {o.name}

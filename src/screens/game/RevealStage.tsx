@@ -141,7 +141,7 @@ export function RevealStage({
             animate={{ opacity: 1 }}
           >
             <div className="mb-2 flex items-center gap-2 font-display text-lg font-bold text-white uppercase">
-              <Marker seat={winner!.seat} /> {winner!.name} captures a prize
+              <Marker seat={winner!.seat} /> {winner!.name} gets a win
               <Pips filled={winner!.prizes.length} />
             </div>
             <div ref={ref} className="flex min-h-0 w-full flex-1 items-start justify-center">
