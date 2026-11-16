@@ -18,6 +18,7 @@ import { Backdrop, Button, Dialog, Marker, Pips } from '../components/ui'
 import { useFitWidth } from '../components/useFit'
 import { useSettings } from '../lib/settings'
 import { save } from '../lib/storage'
+import { preloadCardArt } from '../lib/art'
 import { Handoff } from './game/Handoff'
 import { RevealStage } from './game/RevealStage'
 import { Victory } from './game/Victory'
@@ -42,6 +43,8 @@ export function GameScreen({ initial, onExit, onRestart, onHowToPlay, onSaved }:
   const [inspect, setInspect] = useState<string | null>(null)
   const [announce, setAnnounce] = useState('')
   const { speed, settings, update } = useSettings()
+
+  useEffect(preloadCardArt, [])
 
   const dispatch = useCallback(
     (action: Action) => {

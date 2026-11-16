@@ -19,9 +19,9 @@ export function HomeScreen({
       {/* fanned cards behind the logo */}
       <div className="pointer-events-none relative mb-2 h-40 w-72 sm:h-48" aria-hidden>
         {[
-          { r: -16, x: -70, c: { id: 'a', color: 'blue', number: 7 } as const },
+          { r: -16, x: -70, c: { id: 'blue-07', color: 'blue', number: 7 } as const },
           { r: 0, x: 0, c: null },
-          { r: 16, x: 70, c: { id: 'b', color: 'red', number: 13 } as const },
+          { r: 16, x: 70, c: { id: 'red-13', color: 'red', number: 13 } as const },
         ].map((f, i) => (
           <motion.div
             key={i}

@@ -49,7 +49,7 @@ export function CardFront({ card, className = '' }: { card: Card; className?: st
   if (art) {
     return (
       <div className={`card-shape relative h-full w-full overflow-hidden bg-ink-900 ${className}`}>
-        <img src={art} alt={cardLabel(card)} draggable={false} className="h-full w-full object-cover select-none" />
+        <img src={art} alt={cardLabel(card)} loading="lazy" decoding="async" draggable={false} className="h-full w-full object-cover select-none" />
       </div>
     )
   }
