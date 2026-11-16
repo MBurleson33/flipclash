@@ -25,6 +25,7 @@ import { RevealStage } from './game/RevealStage'
 import { Victory } from './game/Victory'
 
 export const SAVE_KEY = 'flipclash.game.v1'
+const PEEK_SECONDS = 5
 const BOT_MEM_KEY = 'flipclash.botmem.v1'
 
 interface Props {
@@ -133,25 +134,43 @@ export function GameScreen({ initial, onExit, onRestart, onHowToPlay, onSaved }:
     hint =
       me.peekCount < RULES.peekCount
         ? `Tap ${RULES.peekCount - me.peekCount} more card${RULES.peekCount - me.peekCount > 1 ? 's' : ''} to look. Memorize them!`
-        : 'Got them memorized? Hide your cards to continue.'
+        : 'Memorize them! They flip back over in a moment.'
   } else if (state.phase === 'choose-opponent') {
     title = `${active.name}: who will you clash with?`
     hint = 'Pick an opponent who still has face-down cards.'
   } else if (state.phase === 'select-active') {
     title = `${active.name}: pick your card`
-    hint = `Choose one face-down card to clash against ${defender?.name}.`
+    hint = `Pick one of your face-down cards to clash against ${defender?.name}, then lock it in.`
   } else if (state.phase === 'select-defender') {
     title = `${defender?.name}: defend!`
-    hint = `${active.name} picked a card. Choose one of yours — both flip at once.`
+    hint = `${active.name} picked a card. Pick one of yours and lock it in — both flip at once.`
   }
 
   const finishPeek = () => {
+    if (hiding || !decider) return
+    const id = decider.id
     setHiding(true)
     setTimeout(() => {
-      dispatch({ type: 'FINISH_PEEK', playerId: decider!.id })
+      dispatch({ type: 'FINISH_PEEK', playerId: id })
       setHiding(false)
     }, 650 * speed + 50)
   }
+
+  // After the 3rd peek, cards hide themselves after a short countdown (or tap to hide sooner).
+  const [peekLeft, setPeekLeft] = useState<number | null>(null)
+  const peekReady = state.phase === 'peek' && !!me && viewerId === me.id && me.peekCount >= RULES.peekCount && !hiding
+  useEffect(() => {
+    if (!peekReady) {
+      setPeekLeft(null)
+      return
+    }
+    setPeekLeft(PEEK_SECONDS)
+    const iv = setInterval(() => setPeekLeft((n) => (n == null ? n : n - 1)), 1000)
+    return () => clearInterval(iv)
+  }, [peekReady, decider?.id])
+  useEffect(() => {
+    if (peekLeft === 0) finishPeek()
+  }, [peekLeft]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const lockIn = () => {
     if (pick == null || !decider) return
@@ -269,18 +288,36 @@ export function GameScreen({ initial, onExit, onRestart, onHowToPlay, onSaved }:
           }}
           action={
             state.phase === 'peek' ? (
-              <Button
-                variant="primary"
-                className="min-w-60"
-                disabled={me.peekCount < RULES.peekCount || hiding}
-                onClick={finishPeek}
-              >
-                Hide my cards
-              </Button>
+              me.peekCount >= RULES.peekCount ? (
+                <Button variant="primary" className="min-w-60" disabled={hiding} onClick={finishPeek}>
+                  {hiding ? 'Hiding…' : `Hide now${peekLeft ? ` · ${peekLeft}` : ''}`}
+                </Button>
+              ) : (
+                <ActionHint>
+                  {`Tap a card to peek · ${me.peekCount} of ${RULES.peekCount}`}
+                </ActionHint>
+              )
             ) : (
-              <Button variant="primary" className="min-w-60" disabled={pick == null} onClick={lockIn}>
-                {pick == null ? 'Tap a card' : state.phase === 'select-active' ? 'Lock in card' : 'Lock in & clash!'}
-              </Button>
+              pick == null ? (
+                <ActionHint>Tap a card to pick it</ActionHint>
+              ) : (
+                <motion.div
+                  className="relative"
+                  initial={{ y: 8, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ duration: 0.18 }}
+                >
+                  <motion.span
+                    className="pointer-events-none absolute -inset-2 rounded-lg bg-clash-500/40 blur-md"
+                    animate={{ opacity: [0.25, 0.9, 0.25] }}
+                    transition={{ duration: 1.3, repeat: Infinity, ease: 'easeInOut' }}
+                    aria-hidden
+                  />
+                  <Button variant="primary" className="relative min-w-60" onClick={lockIn}>
+                    {state.phase === 'select-active' ? 'Lock in card' : 'Lock in & clash!'}
+                  </Button>
+                </motion.div>
+              )
             )
           }
         />
@@ -595,5 +632,14 @@ function BotThinking({
         )}
       </div>
     </>
+  )
+}
+
+/** Status line in place of a button when the next step is a tap on the board. */
+function ActionHint({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex min-h-12 items-center justify-center px-4 font-display text-sm font-semibold tracking-[0.2em] text-steel-300 uppercase" aria-live="polite">
+      {children}
+    </div>
   )
 }
