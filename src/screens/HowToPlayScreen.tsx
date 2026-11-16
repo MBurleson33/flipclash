@@ -1,12 +1,12 @@
 import { useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
-import { POSITIONS, type Card, type Position } from '../engine'
+import { cardId, POSITIONS, type Card, type Position } from '../engine'
 import type { PlayerView, SlotView } from '../engine/view'
 import { Board } from '../components/Board'
 import { FlipCard } from '../components/FlipCard'
 import { Backdrop, Button, ScreenHeader } from '../components/ui'
 
-const c = (color: Card['color'], number: number): Card => ({ id: `${color}-${number}`, color, number })
+const c = (color: Card['color'], number: number): Card => ({ id: cardId(color, number), color, number })
 
 function demo(opts: {
   up?: Partial<Record<Position, Card>>

@@ -186,8 +186,8 @@ function Fighter({
 }) {
   const { speed } = useSettings()
   return (
-    <div className="flex flex-col items-center gap-2">
-      <div className="flex max-w-full items-center gap-1.5 truncate font-display text-base font-semibold text-steel-100 sm:text-lg">
+    <div className="flex flex-col items-center gap-4">
+      <div className="relative z-10 flex max-w-full items-center gap-1.5 truncate font-display text-base font-semibold text-steel-100 sm:text-lg">
         <Marker seat={seat} /> <span className="truncate">{name}</span>
       </div>
       <motion.div
@@ -197,8 +197,7 @@ function Fighter({
           x: lose ? `${from * 4}%` : '0%',
           opacity: lose ? 0.55 : 1,
           rotate: 0,
-          scale: win ? 1.08 : lose ? 0.9 : 1,
-          y: win ? -6 : 0,
+          scale: win ? 1.05 : lose ? 0.9 : 1,
         }}
         transition={{ type: 'spring', stiffness: 240, damping: 20, duration: 0.4 * speed }}
       >

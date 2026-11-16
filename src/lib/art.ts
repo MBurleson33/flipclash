@@ -21,3 +21,15 @@ export function artFor(name: string): string | undefined {
 }
 
 export const hasAnyCardArt = byName.size > 0
+
+let preloaded = false
+/** Warm the browser cache with every card front so flips never show a blank face. */
+export function preloadCardArt() {
+  if (preloaded) return
+  preloaded = true
+  const urls = [...byName.entries()].filter(([k]) => /^(red|blue|green|yellow|purple)-\d\d$/.test(k)).map(([, u]) => u)
+  const run = () => urls.forEach((u) => { const i = new Image(); i.decoding = 'async'; i.src = u })
+  const w = window as Window & { requestIdleCallback?: (cb: () => void) => void }
+  if (w.requestIdleCallback) w.requestIdleCallback(run)
+  else setTimeout(run, 300)
+}
