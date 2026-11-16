@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import type { Card, CardColor } from '../engine'
 import { artFor } from '../lib/art'
 
@@ -44,12 +45,22 @@ export function CardBack({ className = '' }: { className?: string }) {
 }
 
 /** Card front: official art when present, otherwise the placeholder design. */
-export function CardFront({ card, className = '' }: { card: Card; className?: string }) {
+export function CardFront({ card, className = '', lazy = false }: { card: Card; className?: string; lazy?: boolean }) {
   const art = artFor(card.id)
-  if (art) {
+  const [failed, setFailed] = useState(false)
+  // Load eagerly by default: iOS Safari never lazy-loads an image on the hidden back face of a
+  // 3D-flipped card, so in-game cards must always load right away. Only the gallery grid is lazy.
+  if (art && !failed) {
     return (
       <div className={`card-shape relative h-full w-full overflow-hidden bg-ink-900 ${className}`}>
-        <img src={art} alt={cardLabel(card)} loading="lazy" decoding="async" draggable={false} className="h-full w-full object-cover select-none" />
+        <img
+          src={art}
+          alt={cardLabel(card)}
+          loading={lazy ? 'lazy' : 'eager'}
+          draggable={false}
+          onError={() => setFailed(true)}
+          className="h-full w-full object-cover select-none"
+        />
       </div>
     )
   }
