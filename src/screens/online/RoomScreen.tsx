@@ -292,7 +292,7 @@ function OnlineGame({
     content = (
       <PlayArea
         title="Peek at 3 cards"
-        hint={me.peekCount < RULES.peekCount ? 'Tap your cards to look. Memorize them!' : 'Memorize them! They flip back over in a moment.'}
+        hint={me.peekCount < RULES.peekCount ? 'Secretly look at 3 of your cards. Remember where your high numbers are!' : 'Remember them! They flip back over in a moment.'}
         me={me}
         phase="peek"
         pick={null}
@@ -312,7 +312,7 @@ function OnlineGame({
     content = (
       <ChooseOpponent
         title="Your turn: who will you clash with?"
-        hint="Pick an opponent who still has face-down cards."
+        hint="Pick who to battle this turn."
         options={view.players.filter((p) => p.id !== meId && p.playableCount > 0)}
         onChoose={(id) => act({ type: 'CHOOSE_OPPONENT', playerId: meId!, opponentId: id })}
       />
@@ -320,11 +320,11 @@ function OnlineGame({
   } else if (myPickTurn && me) {
     content = (
       <PlayArea
-        title={iAmAttacker ? 'Your turn: pick your card' : `${active.name} challenged you!`}
+        title={iAmAttacker ? 'Pick a card to battle with' : `${active.name} is battling you!`}
         hint={
           iAmAttacker
-            ? `Pick a face-down card to clash with ${defender?.name}, then lock it in.${view.defenderHasPicked ? ` ${defender?.name} is locked in.` : ''}`
-            : `Pick a card to defend with and lock it in — both flip at once.${view.activeHasPicked ? ` ${active.name} is locked in.` : ''}`
+            ? `Tap one of your face-down cards, then Lock in. ${defender?.name} picks one too, both flip, and the higher number wins the other card.${view.defenderHasPicked ? ` ${defender?.name} is locked in.` : ''}`
+            : `Tap one of your face-down cards, then Lock in. Both flip, and the higher number wins the other card.${view.activeHasPicked ? ` ${active.name} is locked in.` : ''}`
         }
         me={me}
         opponent={opponentForMe ?? undefined}

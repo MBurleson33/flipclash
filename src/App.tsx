@@ -11,6 +11,7 @@ import { SettingsScreen } from './screens/SettingsScreen'
 import { OnlineScreen } from './screens/online/OnlineScreen'
 import { RoomScreen } from './screens/online/RoomScreen'
 import { normalizeCode } from './online/protocol'
+import { markTutorialAsked, TutorialPrompt, tutorialAsked } from './components/TutorialPrompt'
 
 export type Screen = 'home' | 'modes' | 'setup' | 'game' | 'how' | 'gallery' | 'settings' | 'online' | 'room'
 
@@ -21,6 +22,9 @@ export default function App() {
   const [roomCode, setRoomCode] = useState<string | null>(null)
   const [roomName, setRoomName] = useState('')
   const [notice, setNotice] = useState<string | null>(null)
+  // First time on this device: offer the tutorial before the first game.
+  const [askTutorial, setAskTutorial] = useState<Screen | null>(() => (inviteCode && !tutorialAsked() ? 'online' : null))
+  const [howReturn, setHowReturn] = useState<Screen | null>(null)
   const [setupMode, setSetupMode] = useState<'local' | 'ai'>('local')
   const [game, setGame] = useState<GameState | null>(() => {
     const saved = load<GameState | null>(SAVE_KEY, null)
@@ -32,6 +36,36 @@ export default function App() {
     window.scrollTo(0, 0)
   }
 
+  const prompt = (
+    <TutorialPrompt
+      open={!!askTutorial}
+      onTutorial={() => {
+        markTutorialAsked()
+        setHowReturn(askTutorial)
+        setAskTutorial(null)
+        go('how')
+      }}
+      onSkip={() => {
+        markTutorialAsked()
+        const next = askTutorial
+        setAskTutorial(null)
+        if (next && next !== screen) go(next)
+      }}
+    />
+  )
+  const playOrAsk = (target: Screen) => {
+    if (tutorialAsked()) go(target)
+    else setAskTutorial(target)
+  }
+
+  return (
+    <>
+      {renderScreen()}
+      {prompt}
+    </>
+  )
+
+  function renderScreen() {
   switch (screen) {
     case 'modes':
       return (
@@ -76,6 +110,18 @@ export default function App() {
         <HomeScreen hasSave={false} onNav={go} onResume={() => {}} />
       )
     case 'how':
+      if (howReturn) {
+        return (
+          <HowToPlayScreen
+            onBack={() => {
+              const back = howReturn
+              setHowReturn(null)
+              go(back)
+            }}
+            backLabel={howReturn === 'online' ? 'joining' : 'playing'}
+          />
+        )
+      }
       return <HowToPlayScreen onBack={() => go(game ? 'game' : 'home')} backLabel={game ? 'game' : 'home'} />
     case 'online':
       return (
@@ -117,6 +163,7 @@ export default function App() {
     case 'settings':
       return <SettingsScreen onBack={() => go('home')} />
     default:
-      return <HomeScreen hasSave={!!game} onNav={go} onResume={() => go('game')} />
+      return <HomeScreen hasSave={!!game} onNav={(s) => (s === 'modes' ? playOrAsk('modes') : go(s))} onResume={() => go('game')} />
+  }
   }
 }

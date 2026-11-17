@@ -184,12 +184,12 @@ export function BotThinking({
   const { ref, width } = useFitWidth<HTMLDivElement>(FRAMED_RATIO, 420)
   const what =
     phase === 'peek'
-      ? `is peeking at ${RULES.peekCount} cards…`
+      ? `is secretly looking at ${RULES.peekCount} of its own cards (not a move)…`
       : phase === 'choose-opponent'
         ? 'is choosing who to clash with…'
         : phase === 'select-defender'
-          ? `is picking a card to defend against ${against}…`
-          : `is picking a card to clash with ${against}…`
+          ? `is picking a card to battle ${against}…`
+          : `is picking a card to battle ${against}…`
   return (
     <>
       <div className="px-4 pt-1 pb-2 text-center" aria-live="polite">
