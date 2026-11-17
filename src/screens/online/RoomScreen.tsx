@@ -4,7 +4,7 @@ import { RULES, type Action, type Position } from '../../engine'
 import type { GameView, PlayerView } from '../../engine/view'
 import { Board } from '../../components/Board'
 import { Backdrop, Button, Dialog, Marker, ScreenHeader, SEAT_STYLE } from '../../components/ui'
-import { BOARD_RATIO, useFitWidth } from '../../components/useFit'
+import { FRAMED_RATIO, useFitWidth } from '../../components/useFit'
 import { preloadCardArt } from '../../lib/art'
 import { useSettings } from '../../lib/settings'
 import type { RoomSnapshot, SeatKind } from '../../online/protocol'
@@ -285,7 +285,7 @@ function OnlineGame({
         <div className="px-4 pt-2 pb-1 text-center font-display text-sm font-semibold tracking-[0.25em] text-steel-400 uppercase">
           Turn {view.turn}
         </div>
-        <RevealStage key={`${view.turn}-${view.lastClash.attackerCardId}`} view={view} onAnnounce={() => {}} onNext={() => send({ t: 'next' })} />
+        <RevealStage key={`${view.turn}-${view.lastClash.attackerCardId}`} view={view} viewerId={meId} onAnnounce={() => {}} onNext={() => send({ t: 'next' })} />
       </>
     )
   } else if (peeking && me) {
@@ -457,7 +457,7 @@ function OnlineGame({
       >
         {inspect && (
           <div className="mx-auto max-w-[340px]">
-            <Board player={view.players.find((p) => p.id === inspect)!} />
+            <Board player={view.players.find((p) => p.id === inspect)!} owner={inspect === meId ? 'you' : 'name'} />
             <p className="mt-3 text-center text-sm text-steel-400">Face-down cards stay hidden. Eye badges show the spots this player peeked at.</p>
           </div>
         )}
@@ -479,7 +479,7 @@ function Waiting({
   defender: PlayerView | null
   waitingOn: PlayerView[]
 }) {
-  const { ref, width } = useFitWidth<HTMLDivElement>(BOARD_RATIO, 460)
+  const { ref, width } = useFitWidth<HTMLDivElement>(FRAMED_RATIO, 460)
   const names = waitingOn.map((p) => p.name).join(' and ')
   let title = ''
   let hint = ''
@@ -515,7 +515,7 @@ function Waiting({
       <div ref={ref} className="flex min-h-0 flex-1 items-center justify-center px-3 pb-6">
         {width > 0 && (
           <div style={{ width }} className="opacity-90">
-            <Board player={board} selected={view.myPick} />
+            <Board player={board} selected={view.myPick} owner={me ? 'you' : 'name'} />
           </div>
         )}
       </div>

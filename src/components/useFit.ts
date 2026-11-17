@@ -2,6 +2,8 @@ import { useCallback, useLayoutEffect, useState } from 'react'
 
 /** Board height ≈ 1.365 × width (5×5 grid of 5:7 cells + gaps). */
 export const BOARD_RATIO = 1.365
+/** A board with its owner frame and name banner. */
+export const FRAMED_RATIO = 1.47
 
 /** Largest width that fits the element's box at the given height/width ratio. */
 export function useFitWidth<T extends HTMLElement>(ratio = BOARD_RATIO, max = 640) {

@@ -3,6 +3,7 @@ import type { Position } from '../engine'
 import type { PlayerView, SlotView } from '../engine/view'
 import { CardBox, CardFront, cardLabel } from './CardFace'
 import { FlipCard } from './FlipCard'
+import { SEAT_STYLE } from './ui'
 
 // Exact diamond layout on a 5×5 grid (row, col). Cards sit on the diamond,
 // the 4 prize spots fill the gaps around the center card [5].
@@ -35,6 +36,8 @@ interface Props {
   showPeekMarks?: boolean
   newPrizeIndex?: number | null
   className?: string
+  /** Frame the board in its owner's color with a name banner. 'you' = YOUR BOARD. */
+  owner?: 'you' | 'name' | null
 }
 
 export function Board({
@@ -47,9 +50,10 @@ export function Board({
   showPeekMarks = true,
   newPrizeIndex = null,
   className = '',
+  owner = null,
 }: Props) {
-  return (
-    <div className={`w-full ${className}`} style={{ containerType: 'inline-size' }}>
+  const seat = SEAT_STYLE[player.seat] ?? SEAT_STYLE[0]
+  const grid = (
       <div
         className="grid w-full"
         style={{ gridTemplateColumns: 'repeat(5, minmax(0, 1fr))', gap: '2.2cqw' }}
@@ -79,6 +83,37 @@ export function Board({
             <PrizeCell index={i} card={player.prizes[i] ?? null} fresh={newPrizeIndex === i} />
           </div>
         ))}
+      </div>
+  )
+  if (!owner) {
+    return (
+      <div className={`w-full ${className}`} style={{ containerType: 'inline-size' }}>
+        {grid}
+      </div>
+    )
+  }
+  const isYou = owner === 'you'
+  return (
+    <div className={`w-full ${className}`} style={{ containerType: 'inline-size' }}>
+      <div
+        className="relative rounded-[3cqw] p-[2.5cqw] pt-[9cqw]"
+        style={{
+          background: `linear-gradient(180deg, ${seat.color}${isYou ? '26' : '14'}, ${seat.color}05 40%)`,
+          boxShadow: `inset 0 0 0 ${isYou ? 2 : 1}px ${seat.color}${isYou ? 'cc' : '66'}`,
+        }}
+      >
+        <div
+          className="absolute inset-x-0 top-0 flex h-[7.5cqw] items-center justify-center gap-[1.5cqw] rounded-t-[3cqw] font-display font-bold tracking-[0.15em] uppercase"
+          style={{
+            fontSize: '4.2cqw',
+            background: isYou ? seat.color : `${seat.color}33`,
+            color: isYou ? (player.seat === 1 ? '#0d0f12' : '#fff') : seat.color,
+          }}
+        >
+          <span aria-hidden>{seat.shape}</span>
+          <span className="max-w-[80%] truncate">{isYou ? 'Your board' : `${player.name}’s board`}</span>
+        </div>
+        {grid}
       </div>
     </div>
   )
@@ -118,7 +153,20 @@ function SlotCell({
       transition={{ type: 'spring', stiffness: 400, damping: 28 }}
       className="relative"
     >
-      <FlipCard card={slot.card} faceUp={face} glow={glow} dimmed={slot.used && slot.faceUp} />
+      <div className={`transition-[filter] duration-500 ${slot.used && slot.faceUp ? 'grayscale-[85%]' : ''}`}>
+        <FlipCard card={slot.card} faceUp={face} glow={glow} dimmed={slot.used && slot.faceUp} />
+      </div>
+      {slot.used && slot.faceUp && (
+        <span
+          className="absolute -top-[6%] -left-[6%] grid h-[24%] w-[34%] place-items-center rounded-full border border-steel-400/50 bg-ink-800 text-steel-300"
+          title="Already clashed"
+          aria-hidden
+        >
+          <svg viewBox="0 0 24 24" className="h-[70%] w-[70%]" fill="none" stroke="currentColor" strokeWidth="3">
+            <path d="m5 12 5 5 9-10" />
+          </svg>
+        </span>
+      )}
       {showPeekMark && slot.peekedByOwner && !slot.faceUp && (
         <span
           className="absolute -top-[6%] -right-[6%] grid h-[24%] w-[34%] place-items-center rounded-full border border-steel-400/50 bg-ink-800 text-steel-200"
@@ -168,12 +216,25 @@ function PrizeCell({ index, card, fresh }: { index: number; card: import('../eng
         <motion.div
           className="absolute inset-[4%]"
           initial={fresh ? { scale: 1.6, opacity: 0, rotate: -12 } : false}
-          animate={{ scale: 1, opacity: 1, rotate: index % 2 ? 4 : -4 }}
+          animate={{ scale: 1, opacity: 1, rotate: index % 2 ? 2 : -2 }}
           transition={{ type: 'spring', stiffness: 260, damping: 18, delay: fresh ? 0.15 : 0 }}
         >
           <CardBox>
             <CardFront card={card} />
           </CardBox>
+          {/* gold frame + WIN tag: never confused with face-up cards on the board */}
+          <div
+            className="card-shape pointer-events-none absolute -inset-[5%]"
+            style={{ boxShadow: '0 0 0 2px #f5b70a, 0 0 14px 2px #f5b70a88', borderRadius: '8%' }}
+            aria-hidden
+          />
+          <span
+            className="pointer-events-none absolute -bottom-[9%] left-1/2 -translate-x-1/2 rounded-sm px-[8%] font-display leading-none font-bold tracking-widest text-ink-950 uppercase shadow"
+            style={{ background: 'linear-gradient(180deg,#ffd75e,#f5b70a)', fontSize: '15cqw', paddingBlock: '3cqw' }}
+            aria-hidden
+          >
+            ★ Win
+          </span>
           {fresh && (
             <motion.div
               className="pointer-events-none absolute -inset-[10%] rounded-[10%]"

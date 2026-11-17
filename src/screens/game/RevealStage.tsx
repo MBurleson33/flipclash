@@ -5,7 +5,7 @@ import { Board } from '../../components/Board'
 import { cardLabel } from '../../components/CardFace'
 import { FlipCard } from '../../components/FlipCard'
 import { Button, Marker, Pips } from '../../components/ui'
-import { useFitWidth } from '../../components/useFit'
+import { FRAMED_RATIO, useFitWidth } from '../../components/useFit'
 import { useSettings } from '../../lib/settings'
 import { play } from '../../lib/audio'
 
@@ -16,10 +16,13 @@ export function RevealStage({
   view,
   onNext,
   onAnnounce,
+  viewerId = null,
 }: {
   view: GameView
   onNext: () => void
   onAnnounce: (msg: string) => void
+  /** Online: whose phone this is, so their own board reads YOUR BOARD. */
+  viewerId?: string | null
 }) {
   const clash = view.lastClash!
   const { speed } = useSettings()
@@ -74,7 +77,7 @@ export function RevealStage({
   const decided = step === 'result' || step === 'capture'
   const publicView = view
   const winnerView = winner ? publicView.players.find((p) => p.id === winner.id)! : null
-  const { ref, width } = useFitWidth<HTMLDivElement>(1.365, 420)
+  const { ref, width } = useFitWidth<HTMLDivElement>(FRAMED_RATIO, 420)
   const finalClash = !!view.result
 
   return (
@@ -147,10 +150,11 @@ export function RevealStage({
               {width > 0 && (
                 <div style={{ width }}>
                   <Board
+                    owner={viewerId && winner && winner.id === viewerId ? 'you' : 'name'}
                     player={winnerView!}
                     newPrizeIndex={clash.prizeIndex}
                     highlight={[aWins ? clash.attackerPos : clash.defenderPos]}
-                    highlightColor="#f5b70a"
+                    highlightColor="#eef1f4"
                     showPeekMarks={false}
                   />
                 </div>

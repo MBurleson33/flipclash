@@ -5,7 +5,7 @@ import { RULES, type Position } from '../../engine'
 import type { PlayerView } from '../../engine/view'
 import { Board } from '../../components/Board'
 import { Marker, Pips } from '../../components/ui'
-import { BOARD_RATIO, useFitWidth } from '../../components/useFit'
+import { FRAMED_RATIO, useFitWidth } from '../../components/useFit'
 
 export function PlayerChip({
   p,
@@ -76,7 +76,7 @@ export function PlayArea({
   onSlot: (pos: Position) => void
   action: ReactNode
 }) {
-  const { ref, width } = useFitWidth<HTMLDivElement>()
+  const { ref, width } = useFitWidth<HTMLDivElement>(FRAMED_RATIO)
   return (
     <>
       <Instructions title={title} hint={hint} />
@@ -85,6 +85,7 @@ export function PlayArea({
           {width > 0 && (
             <div style={{ width }}>
               <Board
+                owner="you"
                 key={me.id}
                 player={me}
                 selected={pick}
@@ -100,11 +101,7 @@ export function PlayArea({
         </div>
         {opponent && (
           <aside className="hidden w-64 shrink-0 flex-col lg:flex" aria-label={`${opponent.name}'s board`}>
-            <div className="mb-2 flex items-center gap-2 font-display text-sm font-semibold tracking-widest text-steel-300 uppercase">
-              <Marker seat={opponent.seat} /> {opponent.name}
-              <Pips filled={opponent.prizes.length} />
-            </div>
-            <Board player={opponent} />
+            <Board player={opponent} owner="name" />
           </aside>
         )}
       </div>
@@ -184,7 +181,7 @@ export function BotThinking({
   board: PlayerView
   against?: string
 }) {
-  const { ref, width } = useFitWidth<HTMLDivElement>(BOARD_RATIO, 420)
+  const { ref, width } = useFitWidth<HTMLDivElement>(FRAMED_RATIO, 420)
   const what =
     phase === 'peek'
       ? `is peeking at ${RULES.peekCount} cards…`
@@ -216,7 +213,7 @@ export function BotThinking({
       <div ref={ref} className="flex min-h-0 flex-1 items-center justify-center px-3 pb-6">
         {width > 0 && (
           <div style={{ width }} className="opacity-90">
-            <Board player={board} />
+            <Board player={board} owner="name" />
           </div>
         )}
       </div>
