@@ -48,12 +48,54 @@ export function PlayerChip({
   )
 }
 
-export function Instructions({ title, hint }: { title: string; hint: string }) {
+/**
+ * Instructions above the board. Fixed height (2 lines of title + 3 of hint) on every screen,
+ * so the board never jumps when the text changes length.
+ */
+export function Instructions({ title, hint }: { title: ReactNode; hint: ReactNode }) {
   return (
-    <div className="px-4 pt-1 pb-2 text-center">
-      <h1 className="font-display text-xl font-bold tracking-wide text-white uppercase sm:text-2xl">{title}</h1>
-      <p className="mt-0.5 text-sm text-steel-300">{hint}</p>
+    <div className="h-[8rem] shrink-0 overflow-hidden px-4 pt-1 text-center" aria-live="polite">
+      <h1 className="line-clamp-2 font-display text-xl leading-7 font-bold tracking-wide text-white uppercase">{title}</h1>
+      <p className="mt-1 line-clamp-3 text-sm leading-5 text-steel-300">{hint}</p>
     </div>
+  )
+}
+
+/** Bottom action row. Same height on every screen, button or not. */
+export function BottomBar({ children }: { children?: ReactNode }) {
+  return (
+    <div className="flex shrink-0 justify-center px-4 pt-2 pb-[max(env(safe-area-inset-bottom),1rem)]">
+      <div className="flex h-12 items-center justify-center">{children}</div>
+    </div>
+  )
+}
+
+/** The board area between Instructions and BottomBar. Same size on every screen. */
+export function BoardArea({ board, aside }: { board: (width: number) => ReactNode; aside?: ReactNode }) {
+  const { ref, width } = useFitWidth<HTMLDivElement>(FRAMED_RATIO)
+  return (
+    <div className="flex min-h-0 flex-1 gap-6 px-3 lg:px-8">
+      <div ref={ref} className="flex min-h-0 flex-1 items-start justify-center">
+        {width > 0 && <div style={{ width }}>{board(width)}</div>}
+      </div>
+      {/* wide screens: the side column is always reserved so the board never slides sideways */}
+      {aside ?? <div className="hidden w-64 shrink-0 lg:block" aria-hidden />}
+    </div>
+  )
+}
+
+export function ThinkingDots() {
+  return (
+    <span className="ml-1 inline-flex gap-1 align-middle" aria-hidden>
+      {[0, 1, 2].map((i) => (
+        <motion.span
+          key={i}
+          className="h-1.5 w-1.5 rounded-full bg-clash-400"
+          animate={{ opacity: [0.2, 1, 0.2] }}
+          transition={{ duration: 0.9, repeat: Infinity, delay: i * 0.15 }}
+        />
+      ))}
+    </span>
   )
 }
 
@@ -76,36 +118,31 @@ export function PlayArea({
   onSlot: (pos: Position) => void
   action: ReactNode
 }) {
-  const { ref, width } = useFitWidth<HTMLDivElement>(FRAMED_RATIO)
   return (
     <>
       <Instructions title={title} hint={hint} />
-      <div className="flex min-h-0 flex-1 gap-6 px-3 lg:px-8">
-        <div ref={ref} className="flex min-h-0 flex-1 items-center justify-center">
-          {width > 0 && (
-            <div style={{ width }}>
-              <Board
-                owner="you"
-                key={me.id}
-                player={me}
-                selected={pick}
-                canSelect={(s) =>
-                  phase === 'peek'
-                    ? !s.peekVisible && me.peekCount < RULES.peekCount
-                    : !s.empty && !s.faceUp && !s.used
-                }
-                onSelect={onSlot}
-              />
-            </div>
-          )}
-        </div>
-        {opponent && (
-          <aside className="hidden w-64 shrink-0 flex-col lg:flex" aria-label={`${opponent.name}'s board`}>
-            <Board player={opponent} owner="name" />
-          </aside>
+      <BoardArea
+        board={() => (
+          <Board
+            owner="you"
+            key={me.id}
+            player={me}
+            selected={pick}
+            canSelect={(s) =>
+              phase === 'peek' ? !s.peekVisible && me.peekCount < RULES.peekCount : !s.empty && !s.faceUp && !s.used
+            }
+            onSelect={onSlot}
+          />
         )}
-      </div>
-      <div className="flex justify-center px-4 pt-2 pb-[max(env(safe-area-inset-bottom),1rem)]">{action}</div>
+        aside={
+          opponent && (
+            <aside className="hidden w-64 shrink-0 flex-col lg:flex" aria-label={`${opponent.name}'s board`}>
+              <Board player={opponent} owner="name" />
+            </aside>
+          )
+        }
+      />
+      <BottomBar>{action}</BottomBar>
     </>
   )
 }
@@ -181,7 +218,6 @@ export function BotThinking({
   board: PlayerView
   against?: string
 }) {
-  const { ref, width } = useFitWidth<HTMLDivElement>(FRAMED_RATIO, 420)
   const what =
     phase === 'peek'
       ? `is secretly looking at ${RULES.peekCount} of its own cards (not a move)…`
@@ -192,31 +228,23 @@ export function BotThinking({
           : `is picking a card to battle ${against}…`
   return (
     <>
-      <div className="px-4 pt-1 pb-2 text-center" aria-live="polite">
-        <h1 className="flex items-center justify-center gap-2 font-display text-xl font-bold tracking-wide text-white uppercase sm:text-2xl">
-          <Marker seat={seat} /> {name}
-        </h1>
-        <p className="mt-0.5 flex items-center justify-center gap-2 text-sm text-steel-300">
-          {what}
-          <span className="inline-flex gap-1" aria-hidden>
-            {[0, 1, 2].map((i) => (
-              <motion.span
-                key={i}
-                className="h-1.5 w-1.5 rounded-full bg-clash-400"
-                animate={{ opacity: [0.2, 1, 0.2] }}
-                transition={{ duration: 0.9, repeat: Infinity, delay: i * 0.15 }}
-              />
-            ))}
-          </span>
-        </p>
-      </div>
-      <div ref={ref} className="flex min-h-0 flex-1 items-center justify-center px-3 pb-6">
-        {width > 0 && (
-          <div style={{ width }} className="opacity-90">
-            <Board player={board} owner="name" />
-          </div>
-        )}
-      </div>
+      <Instructions
+        title={
+          <>
+            <Marker seat={seat} /> {name}
+          </>
+        }
+        hint={
+          <>
+            {what}
+            <ThinkingDots />
+          </>
+        }
+      />
+      <BoardArea board={() => <div className="opacity-90"><Board player={board} owner="name" /></div>} />
+      <BottomBar>
+        <ActionHint>Computer’s turn</ActionHint>
+      </BottomBar>
     </>
   )
 }

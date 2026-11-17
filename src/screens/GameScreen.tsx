@@ -224,10 +224,9 @@ export function GameScreen({ initial, onExit, onRestart, onHowToPlay, onSaved }:
       {/* ---------- main ---------- */}
       {state.phase === 'reveal' && (
         <>
-          <div className="px-4 pt-2 pb-1 text-center font-display text-sm font-semibold tracking-[0.25em] text-steel-400 uppercase">
-            Turn {state.turn} · Everyone look!
-          </div>
           <RevealStage
+            turnLabel={`Turn ${state.turn} · Everyone look!`}
+            viewerId={humanCount === 1 ? (state.players.find((p) => !p.bot)?.id ?? null) : null}
             key={state.history.length}
             view={publicView}
             onAnnounce={setAnnounce}
