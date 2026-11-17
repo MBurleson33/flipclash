@@ -132,17 +132,17 @@ export function GameScreen({ initial, onExit, onRestart, onHowToPlay, onSaved }:
     title = `${me.name}: peek at ${RULES.peekCount} cards`
     hint =
       me.peekCount < RULES.peekCount
-        ? `Tap ${RULES.peekCount - me.peekCount} more card${RULES.peekCount - me.peekCount > 1 ? 's' : ''} to look. Memorize them!`
-        : 'Memorize them! They flip back over in a moment.'
+        ? `Secretly look at ${RULES.peekCount - me.peekCount} more of your cards. Remember where your high numbers are!`
+        : 'Remember them! They flip back over in a moment.'
   } else if (state.phase === 'choose-opponent') {
     title = `${active.name}: who will you clash with?`
-    hint = 'Pick an opponent who still has face-down cards.'
+    hint = 'Pick who to battle this turn.'
   } else if (state.phase === 'select-active') {
-    title = `${active.name}: pick your card`
-    hint = `Pick one of your face-down cards to clash against ${defender?.name}, then lock it in.`
+    title = `${active.name}: pick a card to battle with`
+    hint = `Tap one of your face-down cards, then Lock in. ${defender?.name} picks one too, both flip, and the higher number wins the other card.`
   } else if (state.phase === 'select-defender') {
-    title = `${defender?.name}: defend!`
-    hint = `${active.name} picked a card. Pick one of yours and lock it in — both flip at once.`
+    title = `${defender?.name}: pick a card to battle with`
+    hint = `${active.name} chose a card to battle you. Tap one of yours, then Lock in. Both flip, and the higher number wins the other card.`
   }
 
   const finishPeek = () => {
@@ -224,10 +224,9 @@ export function GameScreen({ initial, onExit, onRestart, onHowToPlay, onSaved }:
       {/* ---------- main ---------- */}
       {state.phase === 'reveal' && (
         <>
-          <div className="px-4 pt-2 pb-1 text-center font-display text-sm font-semibold tracking-[0.25em] text-steel-400 uppercase">
-            Turn {state.turn} · Everyone look!
-          </div>
           <RevealStage
+            turnLabel={`Turn ${state.turn} · Everyone look!`}
+            viewerId={humanCount === 1 ? (state.players.find((p) => !p.bot)?.id ?? null) : null}
             key={state.history.length}
             view={publicView}
             onAnnounce={setAnnounce}

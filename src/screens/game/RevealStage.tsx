@@ -5,7 +5,7 @@ import { Board } from '../../components/Board'
 import { cardLabel } from '../../components/CardFace'
 import { FlipCard } from '../../components/FlipCard'
 import { Button, Marker, Pips } from '../../components/ui'
-import { FRAMED_RATIO, useFitWidth } from '../../components/useFit'
+import { BoardArea, BottomBar, Instructions } from './parts'
 import { useSettings } from '../../lib/settings'
 import { play } from '../../lib/audio'
 
@@ -17,12 +17,14 @@ export function RevealStage({
   onNext,
   onAnnounce,
   viewerId = null,
+  turnLabel,
 }: {
   view: GameView
   onNext: () => void
   onAnnounce: (msg: string) => void
   /** Online: whose phone this is, so their own board reads YOUR BOARD. */
   viewerId?: string | null
+  turnLabel: string
 }) {
   const clash = view.lastClash!
   const { speed } = useSettings()
@@ -77,16 +79,31 @@ export function RevealStage({
   const decided = step === 'result' || step === 'capture'
   const publicView = view
   const winnerView = winner ? publicView.players.find((p) => p.id === winner.id)! : null
-  const { ref, width } = useFitWidth<HTMLDivElement>(FRAMED_RATIO, 420)
   const finalClash = !!view.result
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col items-center px-4 pb-4">
+    <div className="flex min-h-0 flex-1 flex-col">
+      {step !== 'capture' ? (
+        <Instructions title={turnLabel} hint={decided ? 'Higher number wins the other card.' : 'Both cards flip at the same time…'} />
+      ) : (
+        <Instructions
+          title={
+            <>
+              <Marker seat={winner!.seat} /> {winner!.name} gets a win
+            </>
+          }
+          hint={
+            <span className="inline-flex items-center gap-2">
+              <Pips filled={winner!.prizes.length} /> {winner!.prizes.length} of 4 wins
+            </span>
+          }
+        />
+      )}
       <AnimatePresence mode="wait">
         {step !== 'capture' ? (
           <motion.div
             key="vs"
-            className="flex min-h-0 w-full flex-1 flex-col items-center justify-center"
+            className="flex min-h-0 w-full flex-1 flex-col items-center justify-center px-4"
             exit={{ opacity: 0, scale: 0.92 }}
             transition={{ duration: 0.25 * speed }}
           >
@@ -138,33 +155,27 @@ export function RevealStage({
         ) : (
           <motion.div
             key="capture"
-            className="flex min-h-0 w-full flex-1 flex-col items-center"
+            className="flex min-h-0 w-full flex-1 flex-col"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
           >
-            <div className="mb-2 flex items-center gap-2 font-display text-lg font-bold text-white uppercase">
-              <Marker seat={winner!.seat} /> {winner!.name} gets a win
-              <Pips filled={winner!.prizes.length} />
-            </div>
-            <div ref={ref} className="flex min-h-0 w-full flex-1 items-start justify-center">
-              {width > 0 && (
-                <div style={{ width }}>
-                  <Board
-                    owner={viewerId && winner && winner.id === viewerId ? 'you' : 'name'}
-                    player={winnerView!}
-                    newPrizeIndex={clash.prizeIndex}
-                    highlight={[aWins ? clash.attackerPos : clash.defenderPos]}
-                    highlightColor="#eef1f4"
-                    showPeekMarks={false}
-                  />
-                </div>
+            <BoardArea
+              board={() => (
+                <Board
+                  owner={viewerId && winner && winner.id === viewerId ? 'you' : 'name'}
+                  player={winnerView!}
+                  newPrizeIndex={clash.prizeIndex}
+                  highlight={[aWins ? clash.attackerPos : clash.defenderPos]}
+                  highlightColor="#eef1f4"
+                  showPeekMarks={false}
+                />
               )}
-            </div>
+            />
           </motion.div>
         )}
       </AnimatePresence>
 
-      <div className="mt-3 h-12">
+      <BottomBar>
         {decided && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 * speed }}>
             <Button variant="primary" className="relative min-w-56 overflow-hidden" onClick={onNext} autoFocus>
@@ -182,7 +193,7 @@ export function RevealStage({
             </Button>
           </motion.div>
         )}
-      </div>
+      </BottomBar>
     </div>
   )
 }

@@ -117,7 +117,7 @@ export function HowToPlayScreen({ onBack, backLabel }: { onBack: () => void; bac
           </Button>
         ) : (
           <Button variant="primary" onClick={onBack}>
-            Back to {backLabel}
+            {backLabel === 'playing' ? 'Let’s play!' : backLabel === 'joining' ? 'Join the game' : `Back to ${backLabel}`}
           </Button>
         )}
       </div>
