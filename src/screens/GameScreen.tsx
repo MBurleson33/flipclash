@@ -407,7 +407,7 @@ export function GameScreen({ initial, onExit, onRestart, onHowToPlay, onSaved }:
       >
         {inspect && (
           <div className="mx-auto max-w-[340px]">
-            <Board player={publicView.players.find((p) => p.id === inspect)!} />
+            <Board player={publicView.players.find((p) => p.id === inspect)!} owner="name" />
             <p className="mt-3 text-center text-sm text-steel-400">
               Face-down cards stay hidden. Eye badges show the spots this player peeked at.
             </p>
