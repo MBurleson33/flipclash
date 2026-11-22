@@ -1,7 +1,7 @@
 import { motion } from 'motion/react'
 import type { Screen } from '../App'
 import { Backdrop, Button, Logo } from '../components/ui'
-import { CardBack, CardBox, CardFront } from '../components/CardFace'
+import { CardBox, CardFront } from '../components/CardFace'
 
 export function HomeScreen({
   hasSave,
@@ -19,18 +19,21 @@ export function HomeScreen({
       {/* fanned cards behind the logo */}
       <div className="pointer-events-none relative mb-2 h-40 w-72 sm:h-48" aria-hidden>
         {[
-          { r: -16, x: -70, c: { id: 'blue-07', color: 'blue', number: 7 } as const },
-          { r: 0, x: 0, c: null },
-          { r: 16, x: 70, c: { id: 'red-13', color: 'red', number: 13 } as const },
+          { r: -16, x: -70, c: { id: 'green-13', color: 'green', number: 13 } as const },
+          { r: 0, x: 0, c: { id: 'red-13', color: 'red', number: 13 } as const },
+          { r: 16, x: 70, c: { id: 'blue-13', color: 'blue', number: 13 } as const },
         ].map((f, i) => (
           <motion.div
             key={i}
             className="absolute top-0 left-1/2 w-24 sm:w-28"
+            style={{ zIndex: i === 1 ? 2 : 1 }}
             initial={{ opacity: 0, y: 30, rotate: 0, x: '-50%' }}
             animate={{ opacity: 1, y: i === 1 ? -8 : 6, rotate: f.r, x: `calc(-50% + ${f.x}px)` }}
             transition={{ delay: 0.15 + i * 0.08, type: 'spring', stiffness: 160, damping: 18 }}
           >
-            <CardBox>{f.c ? <CardFront card={f.c} /> : <CardBack />}</CardBox>
+            <CardBox>
+              <CardFront card={f.c} />
+            </CardBox>
           </motion.div>
         ))}
       </div>
