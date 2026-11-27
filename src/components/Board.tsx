@@ -4,6 +4,7 @@ import type { PlayerView, SlotView } from '../engine/view'
 import { CardBox, CardFront, cardLabel } from './CardFace'
 import { FlipCard } from './FlipCard'
 import { SEAT_STYLE } from './ui'
+import { Sparks } from './Effects'
 
 // Exact diamond layout on a 5×5 grid (row, col). Cards sit on the diamond,
 // the 4 prize spots fill the gaps around the center card [5].
@@ -235,6 +236,11 @@ function PrizeCell({ index, card, fresh }: { index: number; card: import('../eng
           >
             ★ Win
           </span>
+          {fresh && (
+            <div className="pointer-events-none absolute -inset-[120%] z-20">
+              <Sparks fire={1} colors={['#ffd75e', '#f5b70a', '#ffffff']} count={30} power={0.7} gravity={0.08} />
+            </div>
+          )}
           {fresh && (
             <motion.div
               className="pointer-events-none absolute -inset-[10%] rounded-[10%]"
