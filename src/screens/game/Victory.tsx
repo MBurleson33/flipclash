@@ -3,6 +3,7 @@ import { motion } from 'motion/react'
 import type { GameView } from '../../engine/view'
 import { Backdrop, Button, Logo, Marker, Pips } from '../../components/ui'
 import { useSettings } from '../../lib/settings'
+import { LightRays } from '../../components/Effects'
 import { play } from '../../lib/audio'
 
 const BURST = ['#e8231a', '#1f7bff', '#22c55e', '#f5b70a', '#8b4dff', '#eef1f4']
@@ -50,6 +51,7 @@ export function Victory({
       aria-label={isDraw ? 'Draw' : `${winners[0].name} wins`}
     >
       <Backdrop dim={0.45} />
+      <LightRays className="-z-[5]" />
       <div className="pointer-events-none absolute top-1/2 left-1/2" aria-hidden>
         {pieces.map((p) => (
           <motion.span
@@ -76,7 +78,18 @@ export function Victory({
         <h2 className="mt-1 font-display text-5xl font-bold text-white sm:text-6xl">
           {winners.map((w) => (
             <span key={w.id} className="mx-2 inline-flex items-center gap-2">
-              <Marker seat={w.seat} /> {w.name}
+              <Marker seat={w.seat} />{' '}
+              <span
+                style={{
+                  background: 'linear-gradient(180deg,#fff6d6 0%,#ffd75e 40%,#d99a06 60%,#ffe9a3 100%)',
+                  WebkitBackgroundClip: 'text',
+                  backgroundClip: 'text',
+                  color: 'transparent',
+                  filter: 'drop-shadow(0 0 14px rgba(245,183,10,0.45))',
+                }}
+              >
+                {w.name}
+              </span>
             </span>
           ))}
         </h2>

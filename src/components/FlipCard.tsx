@@ -4,6 +4,7 @@ import type { Card } from '../engine'
 import { CardBack, CardBox, CardFront, COLOR_HEX } from './CardFace'
 import { useSettings } from '../lib/settings'
 import { play } from '../lib/audio'
+import { Shine } from './Effects'
 
 interface Props {
   card: Card | null
@@ -25,6 +26,7 @@ export function FlipCard({ card, faceUp, glow, dimmed, sound = true, onFlipped, 
   const shown = card ?? lastCard.current
 
   const [revealGlow, setRevealGlow] = useState(false)
+  const [shine, setShine] = useState(0)
   const first = useRef(true)
   useEffect(() => {
     if (first.current) {
@@ -34,6 +36,7 @@ export function FlipCard({ card, faceUp, glow, dimmed, sound = true, onFlipped, 
     if (sound) play('flip')
     if (faceUp) {
       setRevealGlow(true)
+      setShine((n) => n + 1)
       const t = setTimeout(() => setRevealGlow(false), 700 * speed + 50)
       return () => clearTimeout(t)
     }
@@ -56,6 +59,7 @@ export function FlipCard({ card, faceUp, glow, dimmed, sound = true, onFlipped, 
           </div>
           <div className="backface-hidden absolute inset-0" style={{ transform: 'rotateY(180deg)' }}>
             {shown && <CardFront card={shown} />}
+            <Shine play={shine} delay={0.35 * speed} />
           </div>
         </motion.div>
       </div>

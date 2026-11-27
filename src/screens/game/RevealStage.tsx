@@ -5,6 +5,8 @@ import { Board } from '../../components/Board'
 import { cardLabel } from '../../components/CardFace'
 import { FlipCard } from '../../components/FlipCard'
 import { Button, Marker, Pips } from '../../components/ui'
+import { ImpactFlash, Shine, Sparks, useFx } from '../../components/Effects'
+import { COLOR_HEX } from '../../components/CardFace'
 import { BoardArea, BottomBar, Instructions } from './parts'
 import { useSettings } from '../../lib/settings'
 import { play } from '../../lib/audio'
@@ -75,6 +77,9 @@ export function RevealStage({
     return () => clearTimeout(t)
   }, [settled]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  const fx = useFx()
+  const impact = step === 'flip' ? 1 : 0
+  const celebrate = step === 'result' && winner ? 1 : 0
   const flipped = step !== 'ready'
   const decided = step === 'result' || step === 'capture'
   const publicView = view
@@ -107,7 +112,20 @@ export function RevealStage({
             exit={{ opacity: 0, scale: 0.92 }}
             transition={{ duration: 0.25 * speed }}
           >
-            <div className="grid w-full max-w-xl grid-cols-[1fr_auto_1fr] items-center gap-3 sm:gap-6">
+            <motion.div
+              className="relative grid w-full max-w-xl grid-cols-[1fr_auto_1fr] items-center gap-3 sm:gap-6"
+              animate={fx && impact ? { x: [0, -9, 8, -6, 4, -2, 0], y: [0, 4, -3, 2, -1, 0] } : { x: 0, y: 0 }}
+              transition={{ duration: 0.42, delay: 0.12 * speed, ease: 'easeOut' }}
+            >
+              <Sparks fire={impact} colors={[COLOR_HEX[aCard.color], COLOR_HEX[dCard.color], '#ffffff', '#ffd75e']} count={56} power={1.1} />
+              <Sparks
+                fire={celebrate}
+                colors={['#ffd75e', '#f5b70a', '#fff4c2']}
+                count={34}
+                rise
+                origin={{ x: aWins ? 0.2 : 0.8, y: 0.85 }}
+              />
+              <ImpactFlash fire={impact} />
               <Fighter
                 name={attacker.name}
                 seat={attacker.seat}
@@ -117,11 +135,17 @@ export function RevealStage({
                 lose={decided && dWins}
                 tie={decided && !winner}
                 from={-1}
+                impact={!!impact}
               />
               <motion.div
-                className="font-display text-3xl font-bold italic text-clash-500 sm:text-5xl"
-                animate={step === 'flip' ? { scale: [1, 1.5, 1] } : {}}
-                transition={{ duration: 0.4 * speed }}
+                className="relative z-10 font-display text-3xl font-bold italic sm:text-5xl"
+                style={{
+                  color: '#fff',
+                  WebkitTextStroke: '1.5px #e8231a',
+                  textShadow: '0 0 18px #e8231a, 0 3px 0 #8a0d08',
+                }}
+                animate={step === 'flip' ? { scale: [1, 1.7, 1], rotate: [0, -8, 0] } : {}}
+                transition={{ duration: 0.45 * speed }}
                 aria-hidden
               >
                 VS
@@ -135,8 +159,9 @@ export function RevealStage({
                 lose={decided && aWins}
                 tie={decided && !winner}
                 from={1}
+                impact={!!impact}
               />
-            </div>
+            </motion.div>
             <div className="mt-6 min-h-16 text-center" aria-hidden>
               {decided && (
                 <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
@@ -207,6 +232,7 @@ function Fighter({
   lose,
   tie,
   from,
+  impact = false,
 }: {
   name: string
   seat: number
@@ -216,8 +242,10 @@ function Fighter({
   lose: boolean
   tie: boolean
   from: number
+  impact?: boolean
 }) {
   const { speed } = useSettings()
+  const fx = useFx()
   return (
     <div className="flex flex-col items-center gap-4">
       <div className="relative z-10 flex max-w-full items-center gap-1.5 truncate font-display text-base font-semibold text-steel-100 sm:text-lg">
@@ -226,15 +254,32 @@ function Fighter({
       <motion.div
         className="w-full max-w-[200px]"
         initial={{ x: `${from * 60}%`, opacity: 0, rotate: from * 8 }}
-        animate={{
-          x: lose ? `${from * 4}%` : '0%',
-          opacity: lose ? 0.55 : 1,
-          rotate: 0,
-          scale: win ? 1.05 : lose ? 0.9 : 1,
-        }}
-        transition={{ type: 'spring', stiffness: 240, damping: 20, duration: 0.4 * speed }}
+        animate={
+          fx && impact && !win && !lose && !tie
+            ? { x: ['0%', `${-from * 16}%`, '0%'], scale: [1, 1.08, 1], opacity: 1, rotate: [0, -from * 4, 0] }
+            : {
+                x: lose ? `${from * 4}%` : '0%',
+                opacity: lose ? 0.55 : 1,
+                rotate: 0,
+                scale: win ? 1.06 : lose ? 0.9 : 1,
+                y: win ? -6 : lose ? 6 : 0,
+              }
+        }
+        transition={
+          fx && impact && !win && !lose && !tie
+            ? { duration: 0.32, ease: [0.5, 0, 0.3, 1] }
+            : { type: 'spring', stiffness: 240, damping: 20, duration: 0.4 * speed }
+        }
+        style={{ filter: lose ? 'grayscale(0.7) brightness(0.8)' : undefined, transition: 'filter 400ms' }}
       >
-        <FlipCard card={card} faceUp={flipped} glow={win ? '#f5b70a' : tie ? '#aeb5be' : null} />
+        <div className="relative">
+          <FlipCard card={card} faceUp={flipped} glow={win ? '#f5b70a' : tie ? '#aeb5be' : null} />
+          {win && (
+            <div className="pointer-events-none absolute inset-0">
+              <Shine play={1} strength={0.8} />
+            </div>
+          )}
+        </div>
       </motion.div>
       <div className="h-6 font-display text-sm font-bold tracking-widest uppercase">
         {win && <span className="text-[#f5b70a]">Winner</span>}
